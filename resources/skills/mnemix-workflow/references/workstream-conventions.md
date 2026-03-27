@@ -2,6 +2,8 @@
 
 ## Generated Shape
 
+Run the scaffold command from inside the target repository or linked git worktree. The script uses the current working directory to decide where the new workstream should be created.
+
 New workstreams should be created under:
 
 ```text

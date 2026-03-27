@@ -1,0 +1,30 @@
+[package]
+name = "mnemix-workflow"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/micahcourey/mnemix-workflow"
+homepage = "https://github.com/micahcourey/mnemix-workflow"
+documentation = "https://github.com/micahcourey/mnemix-workflow"
+rust-version = "1.85"
+authors = ["Micah Courey"]
+description = "Lightweight, repo-native workflow CLI for planning with AI assistance"
+keywords = ["workflow", "planning", "cli", "agents", "specs"]
+categories = ["command-line-utilities", "development-tools"]
+
+[dependencies]
+anyhow = "1.0.100"
+clap = { version = "4.5.53", features = ["derive"] }
+
+[[bin]]
+name = "mnemix-workflow"
+path = "src/bin/mnemix-workflow.rs"
+
+[[bin]]
+name = "mxw"
+path = "src/bin/mxw.rs"
+
+[dev-dependencies]
+assert_cmd = "2.1.1"
+predicates = "3.1.3"
+tempfile = "3.23.0"
