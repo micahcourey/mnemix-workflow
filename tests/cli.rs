@@ -30,7 +30,12 @@ fn init_creates_workflow_structure() {
         .success()
         .stdout(contains("Initialized Mnemix Workflow"));
 
-    assert!(temp_dir.path().join("workflow/decisions/README.md").is_file());
+    assert!(
+        temp_dir
+            .path()
+            .join("workflow/decisions/README.md")
+            .is_file()
+    );
     assert!(temp_dir.path().join("workflow/workstreams").is_dir());
 }
 

@@ -1,7 +1,11 @@
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "Lightweight workflow CLI for planning with AI assistance")]
+#[command(
+    author,
+    version,
+    about = "Lightweight workflow CLI for planning with AI assistance"
+)]
 pub(crate) struct Cli {
     #[command(subcommand)]
     pub(crate) command: Command,

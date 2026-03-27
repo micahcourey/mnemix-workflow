@@ -10,7 +10,8 @@ const WORKSTREAM_DECISIONS_README: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/decisions/README.md");
 const SPEC_TEMPLATE: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/spec.md");
-const UX_TEMPLATE: &str = include_str!("../resources/skills/mnemix-workflow/assets/workstream/ux.md");
+const UX_TEMPLATE: &str =
+    include_str!("../resources/skills/mnemix-workflow/assets/workstream/ux.md");
 const PLAN_TEMPLATE: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/plan.md");
 const TASKS_TEMPLATE: &str =
@@ -39,9 +40,7 @@ pub(crate) fn ensure_initialized(repo_root: &Path, program: &str) -> Result<()> 
         return Ok(());
     }
 
-    bail!(
-        "Repository is not initialized for Mnemix Workflow. Run `{program} init` first."
-    );
+    bail!("Repository is not initialized for Mnemix Workflow. Run `{program} init` first.");
 }
 
 pub(crate) fn init_repository(repo_root: &Path) -> Result<bool> {
@@ -91,11 +90,7 @@ pub(crate) fn create_workstream(repo_root: &Path, name: &str) -> Result<PathBuf>
     fs::create_dir_all(destination.join("decisions"))
         .with_context(|| format!("Failed to create {}", destination.display()))?;
 
-    write_template(
-        &destination.join("spec.md"),
-        SPEC_TEMPLATE,
-        &substitutions,
-    )?;
+    write_template(&destination.join("spec.md"), SPEC_TEMPLATE, &substitutions)?;
     write_template(&destination.join("ux.md"), UX_TEMPLATE, &substitutions)?;
     write_template(&destination.join("plan.md"), PLAN_TEMPLATE, &substitutions)?;
     write_template(
