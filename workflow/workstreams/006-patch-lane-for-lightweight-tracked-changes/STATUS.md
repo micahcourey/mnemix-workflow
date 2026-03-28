@@ -3,7 +3,7 @@ status: completed
 summary: Implemented the lightweight patch lane so every PR can be tracked in either a workstream or a patch.
 updated: 2026-03-28
 prs:
-- 5
+- 6
 
 ---
 

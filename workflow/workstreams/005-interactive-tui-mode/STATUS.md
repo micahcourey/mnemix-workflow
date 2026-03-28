@@ -3,7 +3,7 @@ status: open
 summary: V1 interactive TUI planning is active and ready for implementation.
 updated: 2026-03-28
 prs:
-- 5
+- 6
 
 ---
 
