@@ -3,6 +3,7 @@
 mod cli;
 mod commands;
 mod scaffold;
+mod status;
 
 use std::{path::Path, process::ExitCode};
 

@@ -43,10 +43,6 @@
 
 - [Risk 1]
 
-## Open Questions
-
-- [Question 1]
-
 ## References
 
 - [Related docs]

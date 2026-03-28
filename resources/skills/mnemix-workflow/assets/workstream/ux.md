@@ -87,10 +87,6 @@ Scenario: [Behavioral scenario]
   Then ...
 ```
 
-## Open Questions
-
-- [Question 1]
-
 ## References
 
 - [Related docs]

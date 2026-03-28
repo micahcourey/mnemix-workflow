@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import datetime as dt
+import pathlib
+import re
+import subprocess
+import sys
+
+
+WORKSTREAM_RE = re.compile(r"^workflow/workstreams/([^/]+)/")
+UPDATED_RE = re.compile(r"(^updated:\s*)(.+)$", re.MULTILINE)
+
+
+def run_git(*args: str, cwd: pathlib.Path) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def repo_root() -> pathlib.Path:
+    return pathlib.Path(run_git("rev-parse", "--show-toplevel", cwd=pathlib.Path.cwd()))
+
+
+def staged_workstreams(root: pathlib.Path) -> dict[str, set[str]]:
+    files = run_git("diff", "--cached", "--name-only", "--diff-filter=ACMR", cwd=root).splitlines()
+    workstreams: dict[str, set[str]] = {}
+    for file_path in files:
+        match = WORKSTREAM_RE.match(file_path)
+        if not match:
+            continue
+        workstreams.setdefault(match.group(1), set()).add(file_path)
+    return workstreams
+
+
+def touch_status_file(status_path: pathlib.Path, root: pathlib.Path) -> bool:
+    original = status_path.read_text()
+    today = dt.date.today().isoformat()
+    updated = UPDATED_RE.sub(rf"\g<1>{today}", original, count=1)
+    if updated == original:
+        return False
+    status_path.write_text(updated)
+    relative = status_path.relative_to(root)
+    run_git("add", str(relative), cwd=root)
+    return True
+
+
+def main() -> int:
+    try:
+        root = repo_root()
+        touched = staged_workstreams(root)
+    except subprocess.CalledProcessError:
+        return 0
+
+    for workstream, changed_files in touched.items():
+        status_relative = f"workflow/workstreams/{workstream}/STATUS.md"
+        if changed_files == {status_relative}:
+            continue
+
+        status_path = root / status_relative
+        if not status_path.is_file():
+            continue
+
+        if touch_status_file(status_path, root):
+            print(f"Updated {status_relative}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
