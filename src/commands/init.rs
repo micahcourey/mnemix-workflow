@@ -15,6 +15,8 @@ pub(crate) fn run(cwd: &Path, program: &str) -> Result<Vec<String>> {
 
     Ok(vec![
         format!("{action} in: {}", repo_root.display()),
-        format!("Next step: run {program} new \"<workstream name>\""),
+        format!(
+            "Next step: run {program} new \"<workstream name>\" or {program} patch new \"<patch name>\""
+        ),
     ])
 }

@@ -9,6 +9,7 @@ It gives teams a clear, versioned path from intent to execution using:
 - `plan.md` for technical strategy
 - `tasks.md` for execution slices
 - `STATUS.md` for lightweight machine-readable workstream state
+- `patches/` for lightweight tracked fixes and minor enhancements
 
 The framework is designed to stay small in the common case, make UX first-class, and use open standards only where they add real value.
 
@@ -27,6 +28,11 @@ The framework is designed to stay small in the common case, make UX first-class,
 The core idea is simple:
 
 > A workflow is made of workstreams. Each workstream moves from spec to UX to plan to tasks, with decisions recorded when they become durable.
+
+Every pull request should map to either:
+
+- a full `workstream`
+- a lightweight `patch`
 
 ### Core Concepts
 
@@ -48,6 +54,8 @@ The core idea is simple:
   - durable repo-level decisions
 - `workflow/workstreams/<id>/decisions/`
   - decisions local to one workstream
+- `workflow/patches/`
+  - single-file tracked fixes, chores, and narrow enhancements
 
 ### Lightweight By Default
 
@@ -61,6 +69,8 @@ workflow/workstreams/001-some-workstream/
   plan.md
   tasks.md
   decisions/
+
+workflow/patches/0001-fix-status-copy.md
 ```
 
 You do not need every possible layer for every feature. The four core files are the center of gravity. Everything else is additive.
@@ -92,6 +102,7 @@ resources/
     mnemix-workflow/
 workflow/
   decisions/
+  patches/
   workstreams/
     001-bootstrap-mnemix-workflow/
     002-workflow-skill-bootstrap/
@@ -109,6 +120,8 @@ workflow/
   - active workflow artifacts
 - `workflow/workstreams/`
   - individual units of planned work
+- `workflow/patches/`
+  - lightweight tracked changes represented by a single file
 - `workflow/decisions/`
   - durable framework decisions
 
@@ -147,6 +160,7 @@ This creates the minimum workflow domain:
 workflow/
   decisions/
     README.md
+  patches/
   workstreams/
 ```
 
@@ -192,7 +206,32 @@ After scaffolding a workstream:
 4. Write `tasks.md` to break the work into execution slices.
 5. Keep `STATUS.md` current so CLI and future Studio views can track state and linked PRs.
 
-### 5. Read Or Update Status
+### 5. Use A Patch For Smaller Tracked Work
+
+For a narrow fix, chore, or minor enhancement, use a patch instead of a full
+workstream:
+
+```bash
+mxw patch new "fix status copy"
+```
+
+This creates:
+
+```text
+workflow/patches/0001-fix-status-copy.md
+```
+
+Patch files are single-file mini-specs. They carry frontmatter status metadata
+directly in the file using:
+
+- required fields: `status`, `summary`, `updated`
+- optional fields: `prs`
+
+Use a patch when one file can clearly capture the intent, scope, implementation
+notes, and validation. Use a full workstream when the work needs first-class
+spec, UX, plan, and task separation.
+
+### 6. Read Or Update Status
 
 Show status:
 
@@ -214,7 +253,15 @@ mxw status set 004 completed --pr 12
 
 This keeps the workstream path stable while updating frontmatter in `STATUS.md`.
 
-### 6. Optional Local Hooks
+Patches use the same lifecycle metadata:
+
+```bash
+mxw patch status 0001
+mxw patch status set 0001 completed --pr 12
+mxw patch status list --status open
+```
+
+### 7. Optional Local Hooks
 
 The repository includes optional local hook scripts under `resources/hooks/`:
 

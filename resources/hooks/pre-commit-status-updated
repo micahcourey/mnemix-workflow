@@ -10,6 +10,7 @@ import sys
 
 
 WORKSTREAM_RE = re.compile(r"^workflow/workstreams/([^/]+)/")
+PATCH_RE = re.compile(r"^workflow/patches/([^/]+\.md)$")
 UPDATED_RE = re.compile(r"(^updated:\s*)(.+)$", re.MULTILINE)
 
 
@@ -39,6 +40,15 @@ def staged_workstreams(root: pathlib.Path) -> dict[str, set[str]]:
     return workstreams
 
 
+def staged_patches(root: pathlib.Path) -> set[str]:
+    files = run_git("diff", "--cached", "--name-only", "--diff-filter=ACMR", cwd=root).splitlines()
+    patches: set[str] = set()
+    for file_path in files:
+        if PATCH_RE.match(file_path):
+            patches.add(file_path)
+    return patches
+
+
 def touch_status_file(status_path: pathlib.Path, root: pathlib.Path) -> bool:
     original = status_path.read_text()
     today = dt.date.today().isoformat()
@@ -55,6 +65,7 @@ def main() -> int:
     try:
         root = repo_root()
         touched = staged_workstreams(root)
+        touched_patches = staged_patches(root)
     except subprocess.CalledProcessError:
         return 0
 
@@ -69,6 +80,13 @@ def main() -> int:
 
         if touch_status_file(status_path, root):
             print(f"Updated {status_relative}")
+
+    for patch_relative in sorted(touched_patches):
+        patch_path = root / patch_relative
+        if not patch_path.is_file():
+            continue
+        if touch_status_file(patch_path, root):
+            print(f"Updated {patch_relative}")
 
     return 0
 

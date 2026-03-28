@@ -5,15 +5,31 @@ use anyhow::{Result, bail};
 use crate::{
     cli::{StatusAction, StatusArgs, StatusListArgs},
     scaffold::{ensure_initialized, find_repo_root},
-    status::{StatusFile, list_workstreams, resolve_workstream_path, validate_status},
+    status::{StatusFile, TrackedKind, list_tracked_items, resolve_tracked_path, validate_status},
 };
 
 pub(crate) fn run(cwd: &Path, program: &str, args: StatusArgs) -> Result<Vec<String>> {
+    run_for_kind(
+        cwd,
+        program,
+        args.workstream,
+        args.action,
+        TrackedKind::Workstream,
+    )
+}
+
+pub(crate) fn run_for_kind(
+    cwd: &Path,
+    program: &str,
+    item_ref: Option<String>,
+    action: Option<StatusAction>,
+    kind: TrackedKind,
+) -> Result<Vec<String>> {
     let repo_root = find_repo_root(cwd)?;
     ensure_initialized(&repo_root, program)?;
 
-    match (args.workstream, args.action) {
-        (Some(workstream), None) => show_status(&repo_root, &workstream),
+    match (item_ref, action) {
+        (Some(item), None) => show_status(&repo_root, &item, kind),
         (None, Some(StatusAction::Set(args))) => set_status(
             &repo_root,
             &args.workstream,
@@ -21,23 +37,29 @@ pub(crate) fn run(cwd: &Path, program: &str, args: StatusArgs) -> Result<Vec<Str
             args.summary.as_deref(),
             &args.prs,
             args.clear_prs,
+            kind,
         ),
-        (None, Some(StatusAction::List(args))) => list_status(&repo_root, args),
+        (None, Some(StatusAction::List(args))) => list_status(&repo_root, args, kind),
         _ => bail!(
-            "Usage:\n  {program} status <workstream>\n  {program} status set <workstream> <status> [--summary <text>] [--pr <number>]... [--clear-prs]\n  {program} status list [--status <value>]"
+            "Usage:\n  {program} {}status <{}>\n  {program} {}status set <{}> <status> [--summary <text>] [--pr <number>]... [--clear-prs]\n  {program} {}status list [--status <value>]",
+            kind_prefix(kind),
+            kind.singular(),
+            kind_prefix(kind),
+            kind.singular(),
+            kind_prefix(kind),
         ),
     }
 }
 
-fn list_status(repo_root: &Path, args: StatusListArgs) -> Result<Vec<String>> {
+fn list_status(repo_root: &Path, args: StatusListArgs, kind: TrackedKind) -> Result<Vec<String>> {
     if let Some(status) = args.status.as_deref() {
         validate_status(status)?;
     }
 
     let mut lines = Vec::new();
-    for workstream_dir in list_workstreams(repo_root)? {
-        let status_path = workstream_dir.join("STATUS.md");
-        if !status_path.is_file() {
+    for item_path in list_tracked_items(repo_root, kind)? {
+        let status_path = kind.status_path(&item_path);
+        if !status_path.exists() {
             continue;
         }
         let status = StatusFile::read(&status_path)?;
@@ -49,12 +71,9 @@ fn list_status(repo_root: &Path, args: StatusListArgs) -> Result<Vec<String>> {
             continue;
         }
 
-        let workstream_name = workstream_dir
-            .file_name()
-            .and_then(|value| value.to_str())
-            .unwrap_or("<unknown>");
+        let item_name = kind.display_name(&item_path);
         let mut line = format!(
-            "{workstream_name}: {} | {} | {}",
+            "{item_name}: {} | {} | {}",
             status.status(),
             status.updated(),
             status.summary()
@@ -76,26 +95,24 @@ fn list_status(repo_root: &Path, args: StatusListArgs) -> Result<Vec<String>> {
     if lines.is_empty() {
         if let Some(status) = args.status {
             return Ok(vec![format!(
-                "No workstreams found with status `{status}`."
+                "No {} found with status `{status}`.",
+                kind.plural()
             )]);
         }
-        return Ok(vec!["No workstreams found.".to_owned()]);
+        return Ok(vec![format!("No {} found.", kind.plural())]);
     }
 
     Ok(lines)
 }
 
-fn show_status(repo_root: &Path, workstream_ref: &str) -> Result<Vec<String>> {
-    let workstream_dir = resolve_workstream_path(repo_root, workstream_ref)?;
-    let status_path = workstream_dir.join("STATUS.md");
+fn show_status(repo_root: &Path, item_ref: &str, kind: TrackedKind) -> Result<Vec<String>> {
+    let item_path = resolve_tracked_path(repo_root, item_ref, kind)?;
+    let status_path = kind.status_path(&item_path);
     let status = StatusFile::read(&status_path)?;
-    let workstream_name = workstream_dir
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or(workstream_ref);
+    let item_name = kind.display_name(&item_path);
 
     let mut lines = vec![
-        format!("Workstream: {workstream_name}"),
+        format!("{}: {item_name}", capitalize(kind.singular())),
         format!("Status: {}", status.status()),
         format!("Summary: {}", status.summary()),
         format!("Updated: {}", status.updated()),
@@ -118,14 +135,15 @@ fn show_status(repo_root: &Path, workstream_ref: &str) -> Result<Vec<String>> {
 
 fn set_status(
     repo_root: &Path,
-    workstream_ref: &str,
+    item_ref: &str,
     next_status: &str,
     summary: Option<&str>,
     prs: &[u64],
     clear_prs: bool,
+    kind: TrackedKind,
 ) -> Result<Vec<String>> {
-    let workstream_dir = resolve_workstream_path(repo_root, workstream_ref)?;
-    let status_path = workstream_dir.join("STATUS.md");
+    let item_path = resolve_tracked_path(repo_root, item_ref, kind)?;
+    let status_path = kind.status_path(&item_path);
     let mut status = StatusFile::read(&status_path)?;
 
     status.set_status(next_status)?;
@@ -140,13 +158,10 @@ fn set_status(
     status.touch_updated();
     status.write(&status_path)?;
 
-    let workstream_name = workstream_dir
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or(workstream_ref);
+    let item_name = kind.display_name(&item_path);
 
     let mut lines = vec![
-        format!("Updated status for workstream: {workstream_name}"),
+        format!("Updated status for {}: {item_name}", kind.singular()),
         format!("Status: {}", status.status()),
         format!("Summary: {}", status.summary()),
         format!("Updated: {}", status.updated()),
@@ -165,4 +180,19 @@ fn set_status(
     }
 
     Ok(lines)
+}
+
+fn kind_prefix(kind: TrackedKind) -> &'static str {
+    match kind {
+        TrackedKind::Workstream => "",
+        TrackedKind::Patch => "patch ",
+    }
+}
+
+fn capitalize(value: &str) -> String {
+    let mut characters = value.chars();
+    match characters.next() {
+        Some(first) => first.to_uppercase().chain(characters).collect(),
+        None => String::new(),
+    }
 }

@@ -17,6 +17,8 @@ pub(crate) enum Command {
     Init,
     /// Create a new workstream in an initialized repository
     New(NewArgs),
+    /// Create or inspect lightweight tracked patches
+    Patch(PatchArgs),
     /// Read or update workstream status metadata
     Status(StatusArgs),
 }
@@ -25,6 +27,35 @@ pub(crate) enum Command {
 pub(crate) struct NewArgs {
     /// Human-readable workstream name
     pub(crate) name: String,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct PatchArgs {
+    #[command(subcommand)]
+    pub(crate) action: PatchAction,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum PatchAction {
+    /// Create a new patch in an initialized repository
+    New(PatchNewArgs),
+    /// Read or update patch status metadata
+    Status(PatchStatusArgs),
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct PatchNewArgs {
+    /// Human-readable patch name
+    pub(crate) name: String,
+}
+
+#[derive(Args, Debug)]
+#[command(args_conflicts_with_subcommands = true)]
+pub(crate) struct PatchStatusArgs {
+    /// Patch id or file name to inspect
+    pub(crate) patch: Option<String>,
+    #[command(subcommand)]
+    pub(crate) action: Option<StatusAction>,
 }
 
 #[derive(Args, Debug)]

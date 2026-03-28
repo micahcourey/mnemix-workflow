@@ -12,6 +12,7 @@ const WORKSTREAM_DECISIONS_README: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/decisions/README.md");
 const STATUS_TEMPLATE: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/STATUS.md");
+const PATCH_TEMPLATE: &str = include_str!("../resources/skills/mnemix-workflow/assets/patch.md");
 const SPEC_TEMPLATE: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/spec.md");
 const UX_TEMPLATE: &str =
@@ -51,21 +52,33 @@ pub(crate) fn init_repository(repo_root: &Path) -> Result<bool> {
     let workflow_dir = repo_root.join("workflow");
     let decisions_dir = workflow_dir.join("decisions");
     let workstreams_dir = workflow_dir.join("workstreams");
+    let patches_dir = workflow_dir.join("patches");
     let decisions_readme = decisions_dir.join("README.md");
+    let workflow_exists = workflow_dir.exists();
+    let decisions_dir_exists = decisions_dir.exists();
+    let workstreams_dir_exists = workstreams_dir.exists();
+    let patches_dir_exists = patches_dir.exists();
+    let decisions_readme_exists = decisions_readme.exists();
 
     fs::create_dir_all(&decisions_dir)
         .with_context(|| format!("Failed to create {}", decisions_dir.display()))?;
     fs::create_dir_all(&workstreams_dir)
         .with_context(|| format!("Failed to create {}", workstreams_dir.display()))?;
+    fs::create_dir_all(&patches_dir)
+        .with_context(|| format!("Failed to create {}", patches_dir.display()))?;
 
     let mut created = false;
-    if !decisions_readme.exists() {
+    if !decisions_readme_exists {
         fs::write(&decisions_readme, DECISIONS_README)
             .with_context(|| format!("Failed to write {}", decisions_readme.display()))?;
         created = true;
     }
 
-    Ok(created || !workflow_dir.exists())
+    Ok(created
+        || !workflow_exists
+        || !decisions_dir_exists
+        || !workstreams_dir_exists
+        || !patches_dir_exists)
 }
 
 pub(crate) fn create_workstream(repo_root: &Path, name: &str) -> Result<PathBuf> {
@@ -76,7 +89,7 @@ pub(crate) fn create_workstream(repo_root: &Path, name: &str) -> Result<PathBuf>
 
     let workstreams_dir = repo_root.join("workflow").join("workstreams");
     let numeric_id = next_id(&workstreams_dir)?;
-    let formatted_id = format_id(numeric_id);
+    let formatted_id = format_id(numeric_id, 3);
     let title = titleize(name);
     let folder_name = format!("{formatted_id}-{slug}");
     let destination = workstreams_dir.join(folder_name);
@@ -121,6 +134,42 @@ pub(crate) fn create_workstream(repo_root: &Path, name: &str) -> Result<PathBuf>
         .map_err(|_| anyhow!("Failed to build a repository-relative workstream path"))
 }
 
+pub(crate) fn create_patch(repo_root: &Path, name: &str) -> Result<PathBuf> {
+    let slug = slugify(name);
+    if slug.is_empty() {
+        bail!("Name must contain at least one letter or digit.");
+    }
+
+    let patches_dir = repo_root.join("workflow").join("patches");
+    fs::create_dir_all(&patches_dir)
+        .with_context(|| format!("Failed to create {}", patches_dir.display()))?;
+
+    let numeric_id = next_id(&patches_dir)?;
+    let formatted_id = format_id(numeric_id, 4);
+    let title = titleize(name);
+    let file_name = format!("{formatted_id}-{slug}.md");
+    let destination = patches_dir.join(file_name);
+    let today = today_string();
+
+    if destination.exists() {
+        bail!("Patch already exists: {}", destination.display());
+    }
+
+    let substitutions = [
+        ("{{PATCH_ID}}", formatted_id.as_str()),
+        ("{{PATCH_SLUG}}", slug.as_str()),
+        ("{{PATCH_TITLE}}", title.as_str()),
+        ("{{TODAY}}", today.as_str()),
+    ];
+
+    write_template(&destination, PATCH_TEMPLATE, &substitutions)?;
+
+    destination
+        .strip_prefix(repo_root)
+        .map(PathBuf::from)
+        .map_err(|_| anyhow!("Failed to build a repository-relative patch path"))
+}
+
 fn write_template(path: &Path, template: &str, substitutions: &[(&str, &str)]) -> Result<()> {
     let mut content = template.to_owned();
     for (key, value) in substitutions {
@@ -130,18 +179,21 @@ fn write_template(path: &Path, template: &str, substitutions: &[(&str, &str)]) -
     fs::write(path, content).with_context(|| format!("Failed to write {}", path.display()))
 }
 
-fn next_id(workstreams_dir: &Path) -> Result<u32> {
+fn next_id(items_dir: &Path) -> Result<u32> {
     let mut highest = 0;
 
-    for entry in fs::read_dir(workstreams_dir)
-        .with_context(|| format!("Failed to read {}", workstreams_dir.display()))?
+    if !items_dir.exists() {
+        return Ok(1);
+    }
+
+    for entry in fs::read_dir(items_dir)
+        .with_context(|| format!("Failed to read {}", items_dir.display()))?
     {
-        let entry =
-            entry.with_context(|| format!("Failed to inspect {}", workstreams_dir.display()))?;
+        let entry = entry.with_context(|| format!("Failed to inspect {}", items_dir.display()))?;
         let file_type = entry.file_type().with_context(|| {
             format!("Failed to inspect file type for {}", entry.path().display())
         })?;
-        if !file_type.is_dir() {
+        if !file_type.is_dir() && !file_type.is_file() {
             continue;
         }
 
@@ -158,9 +210,10 @@ fn parse_prefix(name: &str) -> Option<u32> {
     prefix.parse().ok()
 }
 
-fn format_id(value: u32) -> String {
-    if value <= 999 {
-        format!("{value:03}")
+fn format_id(value: u32, width: usize) -> String {
+    let max_padded = 10u32.saturating_pow(width as u32).saturating_sub(1);
+    if value <= max_padded {
+        format!("{value:0width$}")
     } else {
         value.to_string()
     }
@@ -220,9 +273,12 @@ mod tests {
     }
 
     #[test]
-    fn format_id_zero_pads_up_to_999() {
-        assert_eq!(format_id(1), "001");
-        assert_eq!(format_id(999), "999");
-        assert_eq!(format_id(1000), "1000");
+    fn format_id_zero_pads_using_requested_width() {
+        assert_eq!(format_id(1, 3), "001");
+        assert_eq!(format_id(999, 3), "999");
+        assert_eq!(format_id(1000, 3), "1000");
+        assert_eq!(format_id(1, 4), "0001");
+        assert_eq!(format_id(9999, 4), "9999");
+        assert_eq!(format_id(10000, 4), "10000");
     }
 }

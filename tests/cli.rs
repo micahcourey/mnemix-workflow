@@ -56,6 +56,7 @@ fn init_creates_workflow_structure() {
             .is_file()
     );
     assert!(temp_dir.path().join("workflow/workstreams").is_dir());
+    assert!(temp_dir.path().join("workflow/patches").is_dir());
 }
 
 #[test]
@@ -69,6 +70,7 @@ fn init_is_safe_to_rerun() {
     )
     .expect("custom decisions readme");
     fs::create_dir_all(temp_dir.path().join("workflow/workstreams")).expect("workstreams dir");
+    fs::create_dir_all(temp_dir.path().join("workflow/patches")).expect("patches dir");
 
     Command::cargo_bin("mnemix-workflow")
         .expect("binary")
@@ -153,6 +155,59 @@ fn new_rejects_invalid_names() {
 }
 
 #[test]
+fn patch_new_creates_first_patch_after_init() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("workflow/patches/0001-fix-status-copy.md"));
+
+    let patch_path = temp_dir
+        .path()
+        .join("workflow/patches/0001-fix-status-copy.md");
+    assert!(patch_path.is_file());
+
+    let patch = fs::read_to_string(&patch_path).expect("read patch");
+    assert!(patch.contains("status: open"));
+    assert!(patch.contains("summary: Fix Status Copy is active and ready for implementation."));
+    assert!(patch.contains("# Patch: Fix Status Copy"));
+}
+
+#[test]
+fn patch_new_backfills_missing_patches_dir() {
+    let temp_dir = init_git_repo();
+
+    fs::create_dir_all(temp_dir.path().join("workflow/decisions")).expect("decisions dir");
+    fs::write(
+        temp_dir.path().join("workflow/decisions/README.md"),
+        "custom decisions readme",
+    )
+    .expect("custom decisions readme");
+    fs::create_dir_all(temp_dir.path().join("workflow/workstreams")).expect("workstreams dir");
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("workflow/patches/0001-fix-status-copy.md"));
+
+    assert!(temp_dir.path().join("workflow/patches").is_dir());
+}
+
+#[test]
 fn status_show_reads_workstream_metadata() {
     let temp_dir = init_git_repo();
 
@@ -180,6 +235,34 @@ fn status_show_reads_workstream_metadata() {
         .stdout(contains(
             "Summary: User Profile Redesign is active and ready for implementation.",
         ));
+}
+
+#[test]
+fn patch_status_show_reads_patch_metadata() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "status", "0001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Patch: 0001-fix-status-copy"))
+        .stdout(contains("Status: open"));
 }
 
 #[test]
@@ -231,6 +314,56 @@ fn status_set_updates_status_summary_and_prs() {
     assert!(status.contains("prs:"));
     assert!(status.contains("- 12"));
     assert!(status.contains("- 13"));
+}
+
+#[test]
+fn patch_status_set_updates_status_summary_and_prs() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args([
+            "patch",
+            "status",
+            "set",
+            "0001",
+            "completed",
+            "--summary",
+            "Fixed the status copy.",
+            "--pr",
+            "22",
+        ])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Updated status for patch: 0001-fix-status-copy"))
+        .stdout(contains("Status: completed"))
+        .stdout(contains("PRs: 22"));
+
+    let patch = fs::read_to_string(
+        temp_dir
+            .path()
+            .join("workflow/patches/0001-fix-status-copy.md"),
+    )
+    .expect("patch file");
+    assert!(patch.contains("status: completed"));
+    assert!(patch.contains("summary: Fixed the status copy."));
+    assert!(patch.contains("prs:"));
+    assert!(patch.contains("- 22"));
 }
 
 #[test]
@@ -301,6 +434,49 @@ fn status_list_filters_by_status() {
         .stdout(contains("002-status-automation: completed"))
         .stdout(contains("PRs: 7"))
         .stdout(predicates::str::contains("001-user-profile-redesign").not());
+}
+
+#[test]
+fn patch_status_list_filters_by_status() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "adjust hook copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "status", "set", "0002", "completed", "--pr", "33"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "status", "list", "--status", "completed"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("0002-adjust-hook-copy: completed"))
+        .stdout(contains("PRs: 33"))
+        .stdout(predicates::str::contains("0001-fix-status-copy").not());
 }
 
 #[test]
@@ -454,6 +630,50 @@ fn pre_commit_hook_refreshes_updated_field() {
 }
 
 #[test]
+fn pre_commit_hook_refreshes_updated_field_for_patches() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let patch_path = temp_dir
+        .path()
+        .join("workflow/patches/0001-fix-status-copy.md");
+    let stale = fs::read_to_string(&patch_path)
+        .expect("read patch")
+        .replace(&Utc::now().date_naive().to_string(), "2020-01-01");
+    fs::write(&patch_path, stale).expect("write stale patch");
+
+    let add_patch = Command::new("git")
+        .args(["add", "workflow/patches/0001-fix-status-copy.md"])
+        .current_dir(temp_dir.path())
+        .status()
+        .expect("git add patch should run");
+    assert!(add_patch.success());
+
+    Command::new("python3")
+        .arg(hook_path("pre-commit-status-updated"))
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Updated workflow/patches/0001-fix-status-copy.md"));
+
+    let patch = fs::read_to_string(&patch_path).expect("read patch");
+    assert!(patch.contains(&format!("updated: {}", Utc::now().date_naive())));
+}
+
+#[test]
 fn pre_push_hook_warns_for_touched_workstreams() {
     let temp_dir = init_git_repo();
 
@@ -536,5 +756,90 @@ fn pre_push_hook_warns_for_touched_workstreams() {
         .stdout(contains("Review workflow/workstreams/001-user-profile-redesign/STATUS.md"))
         .stdout(contains(
             "If this push leads to a PR that completes the workstream, update STATUS.md to completed.",
+        ));
+}
+
+#[test]
+fn pre_push_hook_warns_for_touched_patches() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let add_all = Command::new("git")
+        .args(["add", "."])
+        .current_dir(temp_dir.path())
+        .status()
+        .expect("git add should run");
+    assert!(add_all.success());
+
+    let first_commit = Command::new("git")
+        .args(["commit", "-m", "initial workflow"])
+        .current_dir(temp_dir.path())
+        .status()
+        .expect("git commit should run");
+    assert!(first_commit.success());
+
+    let patch_path = temp_dir
+        .path()
+        .join("workflow/patches/0001-fix-status-copy.md");
+    let updated_patch = fs::read_to_string(&patch_path)
+        .expect("read patch")
+        .replace("## Validation", "## Validation\n\n- Confirmed locally.\n");
+    fs::write(&patch_path, updated_patch).expect("write patch");
+
+    let add_patch = Command::new("git")
+        .args(["add", "workflow/patches/0001-fix-status-copy.md"])
+        .current_dir(temp_dir.path())
+        .status()
+        .expect("git add patch should run");
+    assert!(add_patch.success());
+
+    let second_commit = Command::new("git")
+        .args(["commit", "-m", "touch patch"])
+        .current_dir(temp_dir.path())
+        .status()
+        .expect("git commit should run");
+    assert!(second_commit.success());
+
+    let local_sha = Command::new("git")
+        .args(["rev-parse", "HEAD"])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("rev-parse head");
+    let local_sha = String::from_utf8_lossy(&local_sha.stdout).trim().to_owned();
+
+    let remote_sha = Command::new("git")
+        .args(["rev-parse", "HEAD~1"])
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("rev-parse head~1");
+    let remote_sha = String::from_utf8_lossy(&remote_sha.stdout)
+        .trim()
+        .to_owned();
+
+    let mut command = AssertCommand::new("python3");
+    command
+        .arg(hook_path("pre-push-status-reminder"))
+        .current_dir(temp_dir.path())
+        .write_stdin(format!(
+            "refs/heads/main {local_sha} refs/heads/main {remote_sha}\n"
+        ))
+        .assert()
+        .success()
+        .stdout(contains("Review workflow/patches/0001-fix-status-copy.md"))
+        .stdout(contains(
+            "If this push leads to a PR that completes the patch, update its status to completed.",
         ));
 }
