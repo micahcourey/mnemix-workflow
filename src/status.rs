@@ -76,7 +76,10 @@ pub(crate) fn list_workstreams(repo_root: &Path) -> Result<Vec<PathBuf>> {
     }
 
     entries.sort_by_key(|path| {
-        let name = path.file_name().and_then(|v| v.to_str()).unwrap_or_default();
+        let name = path
+            .file_name()
+            .and_then(|v| v.to_str())
+            .unwrap_or_default();
         let prefix = name
             .split_once('-')
             .and_then(|(prefix, _)| prefix.parse::<u32>().ok())
@@ -98,11 +101,11 @@ pub(crate) struct StatusFile {
 
 impl StatusFile {
     pub(crate) fn read(path: &Path) -> Result<Self> {
-        let content =
-            fs::read_to_string(path).with_context(|| format!("Failed to read {}", path.display()))?;
+        let content = fs::read_to_string(path)
+            .with_context(|| format!("Failed to read {}", path.display()))?;
         let (frontmatter, body) = split_frontmatter(&content)?;
-        let mapping: Mapping =
-            serde_yaml::from_str(frontmatter).with_context(|| format!("Invalid frontmatter in {}", path.display()))?;
+        let mapping: Mapping = serde_yaml::from_str(frontmatter)
+            .with_context(|| format!("Invalid frontmatter in {}", path.display()))?;
 
         let mut status = None;
         let mut summary = None;
@@ -117,22 +120,22 @@ impl StatusFile {
                 .to_owned();
             match key.as_str() {
                 "status" => {
-                    let next = value
-                        .as_str()
-                        .ok_or_else(|| anyhow!("`status` must be a string in {}", path.display()))?;
+                    let next = value.as_str().ok_or_else(|| {
+                        anyhow!("`status` must be a string in {}", path.display())
+                    })?;
                     validate_status(next)?;
                     status = Some(next.to_owned());
                 }
                 "summary" => {
-                    let next = value
-                        .as_str()
-                        .ok_or_else(|| anyhow!("`summary` must be a string in {}", path.display()))?;
+                    let next = value.as_str().ok_or_else(|| {
+                        anyhow!("`summary` must be a string in {}", path.display())
+                    })?;
                     summary = Some(next.to_owned());
                 }
                 "updated" => {
-                    let next = value
-                        .as_str()
-                        .ok_or_else(|| anyhow!("`updated` must be a string in {}", path.display()))?;
+                    let next = value.as_str().ok_or_else(|| {
+                        anyhow!("`updated` must be a string in {}", path.display())
+                    })?;
                     updated = Some(next.to_owned());
                 }
                 "prs" => {
@@ -141,11 +144,9 @@ impl StatusFile {
                         .ok_or_else(|| anyhow!("`prs` must be a list in {}", path.display()))?;
                     let mut numbers = Vec::new();
                     for value in sequence {
-                        numbers.push(
-                            value
-                                .as_u64()
-                                .ok_or_else(|| anyhow!("`prs` entries must be numbers in {}", path.display()))?,
-                        );
+                        numbers.push(value.as_u64().ok_or_else(|| {
+                            anyhow!("`prs` entries must be numbers in {}", path.display())
+                        })?);
                     }
                     prs = Some(numbers);
                 }
@@ -156,9 +157,12 @@ impl StatusFile {
         }
 
         Ok(Self {
-            status: status.ok_or_else(|| anyhow!("Missing required `status` field in {}", path.display()))?,
-            summary: summary.ok_or_else(|| anyhow!("Missing required `summary` field in {}", path.display()))?,
-            updated: updated.ok_or_else(|| anyhow!("Missing required `updated` field in {}", path.display()))?,
+            status: status
+                .ok_or_else(|| anyhow!("Missing required `status` field in {}", path.display()))?,
+            summary: summary
+                .ok_or_else(|| anyhow!("Missing required `summary` field in {}", path.display()))?,
+            updated: updated
+                .ok_or_else(|| anyhow!("Missing required `updated` field in {}", path.display()))?,
             prs,
             extra,
             body: body.to_owned(),
@@ -210,7 +214,10 @@ impl StatusFile {
 
     fn render(&self) -> Result<String> {
         let mut mapping = Mapping::new();
-        mapping.insert(Value::String("status".to_owned()), Value::String(self.status.clone()));
+        mapping.insert(
+            Value::String("status".to_owned()),
+            Value::String(self.status.clone()),
+        );
         mapping.insert(
             Value::String("summary".to_owned()),
             Value::String(self.summary.clone()),

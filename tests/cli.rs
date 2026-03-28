@@ -1,7 +1,7 @@
 use std::{fs, process::Command};
 
-use assert_cmd::assert::OutputAssertExt;
 use assert_cmd::Command as AssertCommand;
+use assert_cmd::assert::OutputAssertExt;
 use assert_cmd::cargo::CommandCargoExt;
 use chrono::Utc;
 use predicates::prelude::PredicateBooleanExt;
@@ -34,10 +34,7 @@ fn init_git_repo() -> TempDir {
 }
 
 fn hook_path(name: &str) -> String {
-    format!(
-        "{}/resources/hooks/{name}",
-        env!("CARGO_MANIFEST_DIR")
-    )
+    format!("{}/resources/hooks/{name}", env!("CARGO_MANIFEST_DIR"))
 }
 
 #[test]
@@ -130,7 +127,9 @@ fn new_creates_first_workstream_after_init() {
 
     let status = fs::read_to_string(workstream_dir.join("STATUS.md")).expect("read status");
     assert!(status.contains("status: open"));
-    assert!(status.contains("summary: User Profile Redesign is active and ready for implementation."));
+    assert!(
+        status.contains("summary: User Profile Redesign is active and ready for implementation.")
+    );
 }
 
 #[test]
@@ -178,7 +177,9 @@ fn status_show_reads_workstream_metadata() {
         .assert()
         .success()
         .stdout(contains("Status: open"))
-        .stdout(contains("Summary: User Profile Redesign is active and ready for implementation."));
+        .stdout(contains(
+            "Summary: User Profile Redesign is active and ready for implementation.",
+        ));
 }
 
 #[test]
@@ -422,7 +423,10 @@ fn pre_commit_hook_refreshes_updated_field() {
     fs::write(&spec_path, "# Feature Spec: Updated\n").expect("write spec");
 
     let add_status = Command::new("git")
-        .args(["add", "workflow/workstreams/001-user-profile-redesign/spec.md"])
+        .args([
+            "add",
+            "workflow/workstreams/001-user-profile-redesign/spec.md",
+        ])
         .current_dir(temp_dir.path())
         .status()
         .expect("git add should run");
@@ -433,7 +437,9 @@ fn pre_commit_hook_refreshes_updated_field() {
         .current_dir(temp_dir.path())
         .assert()
         .success()
-        .stdout(contains("Updated workflow/workstreams/001-user-profile-redesign/STATUS.md"));
+        .stdout(contains(
+            "Updated workflow/workstreams/001-user-profile-redesign/STATUS.md",
+        ));
 
     let status = fs::read_to_string(&status_path).expect("read status");
     assert!(status.contains(&format!("updated: {}", Utc::now().date_naive())));
@@ -485,7 +491,10 @@ fn pre_push_hook_warns_for_touched_workstreams() {
     fs::write(&spec_path, "# Feature Spec: Updated Again\n").expect("write spec");
 
     let add_spec = Command::new("git")
-        .args(["add", "workflow/workstreams/001-user-profile-redesign/spec.md"])
+        .args([
+            "add",
+            "workflow/workstreams/001-user-profile-redesign/spec.md",
+        ])
         .current_dir(temp_dir.path())
         .status()
         .expect("git add spec should run");
@@ -510,7 +519,9 @@ fn pre_push_hook_warns_for_touched_workstreams() {
         .current_dir(temp_dir.path())
         .output()
         .expect("rev-parse head~1");
-    let remote_sha = String::from_utf8_lossy(&remote_sha.stdout).trim().to_owned();
+    let remote_sha = String::from_utf8_lossy(&remote_sha.stdout)
+        .trim()
+        .to_owned();
 
     let mut command = AssertCommand::new("python3");
     command

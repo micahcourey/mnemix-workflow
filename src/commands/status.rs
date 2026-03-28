@@ -14,7 +14,14 @@ pub(crate) fn run(cwd: &Path, program: &str, args: StatusArgs) -> Result<Vec<Str
 
     match (args.workstream, args.action) {
         (Some(workstream), None) => show_status(&repo_root, &workstream),
-        (None, Some(StatusAction::Set(args))) => set_status(&repo_root, &args.workstream, &args.status, args.summary.as_deref(), &args.prs, args.clear_prs),
+        (None, Some(StatusAction::Set(args))) => set_status(
+            &repo_root,
+            &args.workstream,
+            &args.status,
+            args.summary.as_deref(),
+            &args.prs,
+            args.clear_prs,
+        ),
         (None, Some(StatusAction::List(args))) => list_status(&repo_root, args),
         _ => bail!(
             "Usage:\n  {program} status <workstream>\n  {program} status set <workstream> <status> [--summary <text>] [--pr <number>]... [--clear-prs]\n  {program} status list [--status <value>]"
@@ -68,7 +75,9 @@ fn list_status(repo_root: &Path, args: StatusListArgs) -> Result<Vec<String>> {
 
     if lines.is_empty() {
         if let Some(status) = args.status {
-            return Ok(vec![format!("No workstreams found with status `{status}`.")]);
+            return Ok(vec![format!(
+                "No workstreams found with status `{status}`."
+            )]);
         }
         return Ok(vec!["No workstreams found.".to_owned()]);
     }
