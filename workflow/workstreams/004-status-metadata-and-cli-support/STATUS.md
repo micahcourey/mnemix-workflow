@@ -2,6 +2,7 @@
 status: open
 summary: Status metadata conventions and CLI support are being defined and implemented.
 updated: 2026-03-28
+prs: [4]
 ---
 
 # Status
