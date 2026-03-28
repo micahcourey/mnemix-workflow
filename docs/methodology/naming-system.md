@@ -31,6 +31,17 @@ In practice, a workstream is usually:
 
 Each workstream lives under `workflow/workstreams/`.
 
+### Status
+
+`STATUS.md` defines:
+
+- the current lifecycle state
+- a short machine-readable summary
+- the last updated date
+- optional linked PR numbers
+
+This is the lightweight state artifact.
+
 ### Spec
 
 `spec.md` defines:
@@ -61,7 +72,7 @@ This is the experience artifact.
 - the implementation strategy
 - the standards involved
 - the rollout and sequencing
-- the main technical decisions still to be made
+- the main technical design for execution
 
 This is the technical blueprint artifact.
 
@@ -115,6 +126,7 @@ That avoids mixing repo-level decisions directly into the repo root while still 
 
 Each workstream contains more than specs:
 
+- status metadata
 - UX intent
 - technical plan
 - tasks
@@ -135,6 +147,7 @@ The shortest teachable version of the methodology is:
 workflow/
   workstreams/
     001-bootstrap-mnemix-workflow/
+      STATUS.md
       spec.md
       ux.md
       plan.md

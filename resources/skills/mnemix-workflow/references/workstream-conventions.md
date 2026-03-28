@@ -8,6 +8,7 @@ New workstreams should be created under:
 
 ```text
 workflow/workstreams/<id>-<slug>/
+  STATUS.md
   spec.md
   ux.md
   plan.md
@@ -39,3 +40,20 @@ Examples:
 
 - Keep local decisions in `workflow/workstreams/<id>-<slug>/decisions/`
 - Promote durable framework decisions to `workflow/decisions/`
+
+## Status Metadata
+
+- New workstreams should include `STATUS.md` when they are created
+- Required frontmatter fields are:
+  - `status`
+  - `summary`
+  - `updated`
+- Optional frontmatter fields include:
+  - `prs`
+
+## Planning Expectations
+
+- Resolve important planning questions while creating the workstream instead of deferring them into a generic `Open Questions` section
+- Keep `plan.md` focused on implementation approach and execution slices, not a separate decision phase
+- If the human explicitly leaves a meaningful question unresolved, add a focused `Open Questions` section or a decision-oriented plan slice for that item
+- Do not leave placeholder questions throughout the workstream when the answer is already known or can be resolved during creation

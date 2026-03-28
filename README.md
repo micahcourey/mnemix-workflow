@@ -8,6 +8,7 @@ It gives teams a clear, versioned path from intent to execution using:
 - `ux.md` for user or developer experience intent
 - `plan.md` for technical strategy
 - `tasks.md` for execution slices
+- `STATUS.md` for lightweight machine-readable workstream state
 
 The framework is designed to stay small in the common case, make UX first-class, and use open standards only where they add real value.
 
@@ -41,6 +42,8 @@ The core idea is simple:
   - technical approach and design strategy
 - `tasks.md`
   - execution slices and validation checkpoints
+- `STATUS.md`
+  - lightweight machine-readable state and PR linkage for a workstream
 - `workflow/decisions/`
   - durable repo-level decisions
 - `workflow/workstreams/<id>/decisions/`
@@ -52,6 +55,7 @@ The common case is intentionally small:
 
 ```text
 workflow/workstreams/001-some-workstream/
+  STATUS.md
   spec.md
   ux.md
   plan.md
@@ -83,6 +87,7 @@ docs/
 src/
 tests/
 resources/
+  hooks/
   skills/
     mnemix-workflow/
 workflow/
@@ -98,6 +103,8 @@ workflow/
   - explanatory documents about the methodology and project direction
 - `resources/skills/`
   - reusable operational assets such as skills
+- `resources/hooks/`
+  - optional local git hook scripts for status nudges
 - `workflow/`
   - active workflow artifacts
 - `workflow/workstreams/`
@@ -161,6 +168,7 @@ This creates:
 
 ```text
 workflow/workstreams/<id>-user-profile-redesign/
+  STATUS.md
   spec.md
   ux.md
   plan.md
@@ -168,6 +176,11 @@ workflow/workstreams/<id>-user-profile-redesign/
   decisions/
     README.md
 ```
+
+`STATUS.md` is created by default for each new workstream. Its frontmatter uses:
+
+- required fields: `status`, `summary`, `updated`
+- optional fields: `prs`
 
 ### 4. Fill In The Core Artifacts
 
@@ -177,8 +190,43 @@ After scaffolding a workstream:
 2. Write `ux.md` to define the experience and acceptance scenarios.
 3. Write `plan.md` to define the implementation approach.
 4. Write `tasks.md` to break the work into execution slices.
+5. Keep `STATUS.md` current so CLI and future Studio views can track state and linked PRs.
 
-### 5. Use The Skill Directly
+### 5. Read Or Update Status
+
+Show status:
+
+```bash
+mxw status 004
+```
+
+List only completed workstreams:
+
+```bash
+mxw status list --status completed
+```
+
+Set status and link a PR:
+
+```bash
+mxw status set 004 completed --pr 12
+```
+
+This keeps the workstream path stable while updating frontmatter in `STATUS.md`.
+
+### 6. Optional Local Hooks
+
+The repository includes optional local hook scripts under `resources/hooks/`:
+
+- `pre-commit-status-updated`
+  - refreshes `updated` when workstream files change
+- `pre-push-status-reminder`
+  - warns that `STATUS.md` may need review before push
+  - reminds you that if the resulting PR completes the workstream, `STATUS.md` should be set to `completed`
+
+These hooks are local nudges, not the source of truth. Final semantic status should still land through the normal PR flow.
+
+### 7. Use The Skill Directly
 
 The repository includes a real Agent Skills Open Standard skill at:
 
@@ -212,6 +260,7 @@ The current implementation includes:
 - the first bootstrap workstream
 - a real bootstrap skill for creating new workstreams before the dedicated CLI exists
 - an implementation-focused workstream for the first Rust CLI slice
-- a working Rust CLI with `init` and `new` commands plus the `mxw` shorthand alias
+- a working Rust CLI with `init`, `new`, and `status` commands plus the `mxw` shorthand alias
+- optional local hook scripts for `updated` refreshes and push-time reminders
 
 The next major step is packaging and releasing the CLI cleanly so the intended install flow, `pipx install mnemix-workflow`, becomes real for consuming projects.

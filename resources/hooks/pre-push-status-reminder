@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import pathlib
+import re
+import subprocess
+import sys
+
+
+WORKSTREAM_RE = re.compile(r"^workflow/workstreams/([^/]+)/")
+ZERO_SHA = "0" * 40
+
+
+def run_git(*args: str, cwd: pathlib.Path) -> str:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def repo_root() -> pathlib.Path:
+    return pathlib.Path(run_git("rev-parse", "--show-toplevel", cwd=pathlib.Path.cwd()))
+
+
+def default_base(root: pathlib.Path, local_sha: str) -> str | None:
+    candidates = [
+        "refs/remotes/origin/main",
+        "refs/remotes/origin/master",
+        "refs/heads/main",
+        "refs/heads/master",
+    ]
+    for candidate in candidates:
+        try:
+            run_git("rev-parse", "--verify", candidate, cwd=root)
+            return run_git("merge-base", local_sha, candidate, cwd=root)
+        except subprocess.CalledProcessError:
+            continue
+    return None
+
+
+def changed_files(root: pathlib.Path, local_sha: str, remote_sha: str) -> list[str]:
+    if local_sha == ZERO_SHA:
+        return []
+    if remote_sha == ZERO_SHA:
+        base = default_base(root, local_sha)
+        if base is None:
+            return []
+        diff_range = f"{base}..{local_sha}"
+    else:
+        diff_range = f"{remote_sha}..{local_sha}"
+
+    output = run_git("diff", "--name-only", diff_range, cwd=root)
+    return [line for line in output.splitlines() if line]
+
+
+def main() -> int:
+    try:
+        root = repo_root()
+    except subprocess.CalledProcessError:
+        return 0
+
+    touched_workstreams: set[str] = set()
+
+    for line in sys.stdin.read().splitlines():
+        parts = line.split()
+        if len(parts) != 4:
+            continue
+        _, local_sha, _, remote_sha = parts
+        for file_path in changed_files(root, local_sha, remote_sha):
+            match = WORKSTREAM_RE.match(file_path)
+            if match and not file_path.endswith("/STATUS.md"):
+                touched_workstreams.add(match.group(1))
+
+    if not touched_workstreams:
+        return 0
+
+    print("Mnemix Workflow reminder:")
+    for workstream in sorted(touched_workstreams):
+        print(f"- Review workflow/workstreams/{workstream}/STATUS.md")
+    print("- If this push leads to a PR that completes the workstream, update STATUS.md to completed.")
+    print("- Add `prs` metadata when the PR number is known.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

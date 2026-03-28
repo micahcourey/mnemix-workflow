@@ -5,9 +5,13 @@ use std::{
 
 use anyhow::{Context, Result, anyhow, bail};
 
+use crate::status::today_string;
+
 const DECISIONS_README: &str = include_str!("../workflow/decisions/README.md");
 const WORKSTREAM_DECISIONS_README: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/decisions/README.md");
+const STATUS_TEMPLATE: &str =
+    include_str!("../resources/skills/mnemix-workflow/assets/workstream/STATUS.md");
 const SPEC_TEMPLATE: &str =
     include_str!("../resources/skills/mnemix-workflow/assets/workstream/spec.md");
 const UX_TEMPLATE: &str =
@@ -76,6 +80,7 @@ pub(crate) fn create_workstream(repo_root: &Path, name: &str) -> Result<PathBuf>
     let title = titleize(name);
     let folder_name = format!("{formatted_id}-{slug}");
     let destination = workstreams_dir.join(folder_name);
+    let today = today_string();
 
     if destination.exists() {
         bail!("Workstream already exists: {}", destination.display());
@@ -85,11 +90,17 @@ pub(crate) fn create_workstream(repo_root: &Path, name: &str) -> Result<PathBuf>
         ("{{WORKSTREAM_ID}}", formatted_id.as_str()),
         ("{{WORKSTREAM_SLUG}}", slug.as_str()),
         ("{{WORKSTREAM_TITLE}}", title.as_str()),
+        ("{{TODAY}}", today.as_str()),
     ];
 
     fs::create_dir_all(destination.join("decisions"))
         .with_context(|| format!("Failed to create {}", destination.display()))?;
 
+    write_template(
+        &destination.join("STATUS.md"),
+        STATUS_TEMPLATE,
+        &substitutions,
+    )?;
     write_template(&destination.join("spec.md"), SPEC_TEMPLATE, &substitutions)?;
     write_template(&destination.join("ux.md"), UX_TEMPLATE, &substitutions)?;
     write_template(&destination.join("plan.md"), PLAN_TEMPLATE, &substitutions)?;

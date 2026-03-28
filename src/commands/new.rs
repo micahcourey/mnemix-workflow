@@ -11,6 +11,6 @@ pub(crate) fn run(cwd: &Path, program: &str, name: &str) -> Result<Vec<String>> 
 
     Ok(vec![
         format!("Created workstream: {}", destination.display()),
-        "Next step: fill in spec.md, ux.md, plan.md, and tasks.md".to_owned(),
+        "Next step: fill in STATUS.md, spec.md, ux.md, plan.md, and tasks.md".to_owned(),
     ])
 }

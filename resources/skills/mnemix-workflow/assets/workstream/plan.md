@@ -31,13 +31,13 @@
 
 - [Constraint 1]
 
-## Implementation Phases
+## Implementation Slices
 
-### Phase 1
+### Slice 1
 
 - [Task 1]
 
-### Phase 2
+### Slice 2
 
 - [Task 2]
 
@@ -46,10 +46,6 @@
 | Risk | Impact | Likelihood | Mitigation |
 |------|--------|------------|------------|
 | [Risk] | [Impact] | [Likelihood] | [Mitigation] |
-
-## Open Questions
-
-- [Question 1]
 
 ## References
 
