@@ -2,6 +2,8 @@
 status: completed
 summary: Implemented the first browse-first interactive TUI for workstreams and patches.
 updated: 2026-03-28
+prs:
+- 7
 
 ---
 
