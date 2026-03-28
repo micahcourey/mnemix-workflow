@@ -12,37 +12,109 @@ const FRONTMATTER_DELIMITER: &str = "---\n";
 const FRONTMATTER_END: &str = "\n---\n";
 const VALID_STATUSES: &[&str] = &["proposed", "open", "completed"];
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum TrackedKind {
+    Workstream,
+    Patch,
+}
+
+impl TrackedKind {
+    pub(crate) fn singular(self) -> &'static str {
+        match self {
+            Self::Workstream => "workstream",
+            Self::Patch => "patch",
+        }
+    }
+
+    pub(crate) fn plural(self) -> &'static str {
+        match self {
+            Self::Workstream => "workstreams",
+            Self::Patch => "patches",
+        }
+    }
+
+    fn root(self, repo_root: &Path) -> PathBuf {
+        repo_root.join("workflow").join(self.plural())
+    }
+
+    pub(crate) fn status_path(self, item_path: &Path) -> PathBuf {
+        match self {
+            Self::Workstream => item_path.join("STATUS.md"),
+            Self::Patch => item_path.to_path_buf(),
+        }
+    }
+
+    pub(crate) fn display_name(self, item_path: &Path) -> String {
+        let raw_name = item_path
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or(match self {
+                Self::Workstream => "<unknown-workstream>",
+                Self::Patch => "<unknown-patch>",
+            });
+        match self {
+            Self::Workstream => raw_name.to_owned(),
+            Self::Patch => raw_name.trim_end_matches(".md").to_owned(),
+        }
+    }
+}
+
 pub(crate) fn today_string() -> String {
     Utc::now().date_naive().to_string()
 }
 
-pub(crate) fn resolve_workstream_path(repo_root: &Path, workstream_ref: &str) -> Result<PathBuf> {
-    let workstreams_dir = repo_root.join("workflow").join("workstreams");
-    let direct = workstreams_dir.join(workstream_ref);
-    if direct.is_dir() {
-        return Ok(direct);
+pub(crate) fn resolve_tracked_path(
+    repo_root: &Path,
+    tracked_ref: &str,
+    kind: TrackedKind,
+) -> Result<PathBuf> {
+    let items_dir = kind.root(repo_root);
+    if !items_dir.exists() {
+        bail!(
+            "{} not found: {tracked_ref}. Use the numeric id or full name from workflow/{}/.",
+            capitalize(kind.singular()),
+            kind.plural(),
+        );
+    }
+
+    let direct = items_dir.join(tracked_ref);
+    match kind {
+        TrackedKind::Workstream if direct.is_dir() => return Ok(direct),
+        TrackedKind::Patch if direct.is_file() => return Ok(direct),
+        _ => {}
+    }
+
+    if kind == TrackedKind::Patch && direct.with_extension("md").is_file() {
+        return Ok(direct.with_extension("md"));
     }
 
     let mut matches = Vec::new();
-    for entry in fs::read_dir(&workstreams_dir)
-        .with_context(|| format!("Failed to read {}", workstreams_dir.display()))?
+    for entry in fs::read_dir(&items_dir)
+        .with_context(|| format!("Failed to read {}", items_dir.display()))?
     {
-        let entry =
-            entry.with_context(|| format!("Failed to inspect {}", workstreams_dir.display()))?;
+        let entry = entry.with_context(|| format!("Failed to inspect {}", items_dir.display()))?;
         if !entry
             .file_type()
             .with_context(|| format!("Failed to inspect {}", entry.path().display()))?
             .is_dir()
+            && !entry
+                .file_type()
+                .with_context(|| format!("Failed to inspect {}", entry.path().display()))?
+                .is_file()
         {
             continue;
         }
 
         let file_name = entry.file_name();
         let file_name = file_name.to_string_lossy();
-        if file_name == workstream_ref
+        let canonical_name = match kind {
+            TrackedKind::Workstream => file_name.as_ref(),
+            TrackedKind::Patch => file_name.trim_end_matches(".md"),
+        };
+        if canonical_name == tracked_ref
             || file_name
                 .split_once('-')
-                .is_some_and(|(prefix, _)| prefix == workstream_ref)
+                .is_some_and(|(prefix, _)| prefix == tracked_ref)
         {
             matches.push(entry.path());
         }
@@ -51,27 +123,36 @@ pub(crate) fn resolve_workstream_path(repo_root: &Path, workstream_ref: &str) ->
     match matches.len() {
         1 => Ok(matches.remove(0)),
         0 => bail!(
-            "Workstream not found: {workstream_ref}. Use the numeric id or full folder name from workflow/workstreams/."
+            "{} not found: {tracked_ref}. Use the numeric id or full name from workflow/{}/.",
+            capitalize(kind.singular()),
+            kind.plural(),
         ),
-        _ => bail!("Workstream reference is ambiguous: {workstream_ref}"),
+        _ => bail!(
+            "{} reference is ambiguous: {tracked_ref}",
+            capitalize(kind.singular())
+        ),
     }
 }
 
-pub(crate) fn list_workstreams(repo_root: &Path) -> Result<Vec<PathBuf>> {
-    let workstreams_dir = repo_root.join("workflow").join("workstreams");
+pub(crate) fn list_tracked_items(repo_root: &Path, kind: TrackedKind) -> Result<Vec<PathBuf>> {
+    let items_dir = kind.root(repo_root);
     let mut entries = Vec::new();
 
-    for entry in fs::read_dir(&workstreams_dir)
-        .with_context(|| format!("Failed to read {}", workstreams_dir.display()))?
+    if !items_dir.exists() {
+        return Ok(entries);
+    }
+
+    for entry in fs::read_dir(&items_dir)
+        .with_context(|| format!("Failed to read {}", items_dir.display()))?
     {
-        let entry =
-            entry.with_context(|| format!("Failed to inspect {}", workstreams_dir.display()))?;
-        if entry
+        let entry = entry.with_context(|| format!("Failed to inspect {}", items_dir.display()))?;
+        let file_type = entry
             .file_type()
-            .with_context(|| format!("Failed to inspect {}", entry.path().display()))?
-            .is_dir()
-        {
-            entries.push(entry.path());
+            .with_context(|| format!("Failed to inspect {}", entry.path().display()))?;
+        match kind {
+            TrackedKind::Workstream if file_type.is_dir() => entries.push(entry.path()),
+            TrackedKind::Patch if file_type.is_file() => entries.push(entry.path()),
+            _ => {}
         }
     }
 
@@ -258,10 +339,10 @@ impl StatusFile {
 fn split_frontmatter(content: &str) -> Result<(&str, &str)> {
     let remainder = content
         .strip_prefix(FRONTMATTER_DELIMITER)
-        .ok_or_else(|| anyhow!("STATUS.md must start with frontmatter"))?;
+        .ok_or_else(|| anyhow!("Status file must start with frontmatter"))?;
     let end = remainder
         .find(FRONTMATTER_END)
-        .ok_or_else(|| anyhow!("STATUS.md frontmatter must end with `---`"))?;
+        .ok_or_else(|| anyhow!("Status file frontmatter must end with `---`"))?;
     let frontmatter = &remainder[..end];
     let body = &remainder[end + FRONTMATTER_END.len()..];
     Ok((frontmatter, body))
@@ -276,6 +357,14 @@ pub(crate) fn validate_status(value: &str) -> Result<()> {
         "Unsupported status `{value}`. Valid values are: {}",
         VALID_STATUSES.join(", ")
     );
+}
+
+fn capitalize(value: &str) -> String {
+    let mut characters = value.chars();
+    match characters.next() {
+        Some(first) => first.to_uppercase().chain(characters).collect(),
+        None => String::new(),
+    }
 }
 
 #[cfg(test)]

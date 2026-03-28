@@ -21,3 +21,4 @@ Workstream-local decisions should stay beside the workstream in `workflow/workst
 - `007` [`resolve planning questions during workstream creation`](./007-resolve-planning-questions-during-workstream-creation.md): keep workstreams implementation-ready by default, while allowing focused open questions only when the human explicitly defers a decision
 - `008` [`create STATUS.md when a workstream is created`](./008-create-status-file-when-a-workstream-is-created.md): every new workstream should start with a status file
 - `009` [`track related pull requests in status metadata`](./009-track-related-pull-requests-in-status-metadata.md): support an optional `prs` field for linked PR numbers
+- `010` [`use patches for lightweight tracked work`](./010-use-patches-for-lightweight-tracked-work.md): track narrow fixes and minor enhancements in `workflow/patches/` instead of forcing every PR into a full workstream

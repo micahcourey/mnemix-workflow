@@ -1,4 +1,4 @@
-# Workstream Conventions
+# Workflow Conventions
 
 ## Generated Shape
 
@@ -17,11 +17,19 @@ workflow/workstreams/<id>-<slug>/
     README.md
 ```
 
+Lightweight patches should be created under:
+
+```text
+workflow/patches/0001-some-change.md
+```
+
 ## Numbering
 
 - Use zero-padded 3-digit IDs from `001` through `999`
 - After `999`, continue with natural numbers starting at `1000`
 - Always determine the next id numerically, not lexicographically
+
+Patch ids use zero-padded 4-digit prefixes from `0001` onward.
 
 Examples:
 
@@ -41,6 +49,22 @@ Examples:
 - Keep local decisions in `workflow/workstreams/<id>-<slug>/decisions/`
 - Promote durable framework decisions to `workflow/decisions/`
 
+## Choosing The Right Lane
+
+Use a workstream when:
+
+- the change spans multiple surfaces or systems
+- UX needs explicit treatment
+- multiple planning decisions are still open
+- the work benefits from separate `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
+
+Use a patch when:
+
+- the change is narrow and well-bounded
+- a single file can capture the intent and validation clearly
+- the work is a fix, chore, or minor enhancement
+- every PR still needs a tracked planning artifact
+
 ## Status Metadata
 
 - New workstreams should include `STATUS.md` when they are created
@@ -50,6 +74,8 @@ Examples:
   - `updated`
 - Optional frontmatter fields include:
   - `prs`
+
+Patch files use the same frontmatter fields directly in the patch file itself.
 
 ## Planning Expectations
 

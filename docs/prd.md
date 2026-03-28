@@ -13,7 +13,7 @@
 
 ## 1. Overview
 
-`mnemix-workflow` is a lightweight, repo-native feature planning framework for human planning with AI-assisted implementation. It provides a versioned, structured path from intent to execution using `spec.md`, `ux.md`, `plan.md`, and `tasks.md` as the core planning artifacts.
+`mnemix-workflow` is a lightweight, repo-native feature planning framework for human planning with AI-assisted implementation. It provides a versioned, structured path from intent to execution using `spec.md`, `ux.md`, `plan.md`, and `tasks.md` as the core planning artifacts, plus a lightweight `patches/` lane for smaller tracked changes.
 
 This document is the living product document for the project. It replaces the earlier dated plan file and should be updated as the framework, CLI, and methodology evolve.
 
@@ -38,6 +38,7 @@ Without a lightweight, teachable workflow layer:
 | Goal | Success Metric | Target |
 |------|---------------|--------|
 | Create a lightweight planning workflow | Core workflow works with the four primary artifacts | `spec.md`, `ux.md`, `plan.md`, `tasks.md` are sufficient for the common case |
+| Keep every PR tracked without overloading tiny fixes | Small work has a lighter tracked lane | Every PR maps to either a workstream or a patch |
 | Make UX first-class | UX artifact exists and is used in active workstreams | Every user-facing workstream can define `ux.md` with narrative plus Gherkin scenarios |
 | Keep the system repo-native and AI-operable | Workstreams and decisions live in normal versioned files | No required hidden metadata system for the core workflow |
 | Provide a bootstrap path before the CLI exists | Reusable bootstrap tool exists in the repo | A standards-compliant skill can scaffold new workstreams |
@@ -85,6 +86,15 @@ Without a lightweight, teachable workflow layer:
   - Given durable framework decisions, When they are recorded, Then they live under `workflow/decisions/`
 - **Priority**: Must Have
 
+### FR3b: Lightweight Patch Lane
+- **Description**: The framework must support a lightweight tracked lane for narrow fixes and minor enhancements.
+- **User Story**: As a maintainer or AI agent, I want a smaller tracked unit than a full workstream, so that every PR can stay planned without unnecessary ceremony.
+- **Acceptance Criteria**:
+  - Given a narrow fix or minor enhancement, When it is tracked, Then it can live as a single Markdown file under `workflow/patches/`
+  - Given a patch, When it is created, Then it uses frontmatter status metadata consistent with workstreams
+  - Given the framework rule, When a PR is opened, Then it maps to either a workstream or a patch
+- **Priority**: Must Have
+
 ### FR4: Standards-Compliant Bootstrap Skill
 - **Description**: The repo must include a real Agent Skills Open Standard skill for workstream bootstrapping before the dedicated CLI exists.
 - **User Story**: As an AI agent, I want a standards-compliant bootstrap skill, so that I can create new workstreams consistently using the same conventions the framework teaches.
@@ -118,8 +128,8 @@ Without a lightweight, teachable workflow layer:
 1. A maintainer or AI agent opens the repository and reads the root README.
 2. They understand the methodology, repository shape, and active workstreams.
 3. They inspect the current workstream or scaffold a new one using the bootstrap skill.
-4. They fill in `spec.md`, `ux.md`, `plan.md`, and `tasks.md`.
-5. They implement or refine the work using those artifacts as the shared source of intent.
+4. They choose either a full workstream or a lightweight patch based on the scope of the change.
+5. They fill in the relevant artifacts and implement or refine the work using them as the shared source of intent.
 
 ### Wireframes / Mockups
 
@@ -139,16 +149,17 @@ Not applicable for the initial repository-first experience. The primary experien
 
 ### Data Requirements
 - No database requirements for v0
-- Workflows, decisions, and plans are stored as normal versioned repository files
+- Workflows, patches, decisions, and plans are stored as normal versioned repository files
 
 ## 9. Release Criteria
 
 - [ ] Root README clearly explains the product and quickstart
 - [ ] `workflow/` contains the active workstream domain and decision area
+- [ ] `workflow/patches/` is defined as the lightweight tracked lane
 - [ ] The bootstrap skill exists under `resources/skills/mnemix-workflow/`
 - [ ] The bootstrap script can scaffold a valid workstream
 - [ ] `001` and `002` workstreams clearly document the initial methodology and bootstrap path
-- [ ] The next implementation-focused workstream is ready to be created
+- [ ] The CLI can scaffold the primary tracked units the methodology teaches
 
 ## 10. Risks & Mitigations
 
@@ -158,7 +169,7 @@ Not applicable for the initial repository-first experience. The primary experien
 | UX specification becomes too vague or too heavy | Medium | Medium | Keep `ux.md` narrative-first with selective Gherkin scenarios |
 | The bootstrap skill becomes a permanent substitute for the CLI | Medium | Medium | Keep the script intentionally narrow and document it as transitional |
 | Skill scope grows too large | Medium | Medium | Start with one skill, then split only when real complexity appears |
-| Repo structure becomes confusing | Medium | Low | Keep clear boundaries between `docs/`, `resources/`, and `workflow/` |
+| Repo structure becomes confusing | Medium | Low | Keep clear boundaries between `docs/`, `resources/`, and `workflow/`, and explain workstreams versus patches clearly |
 
 ## 11. Timeline
 
@@ -166,14 +177,15 @@ Not applicable for the initial repository-first experience. The primary experien
 |-----------|------------|-------|
 | Repository bootstrap and methodology docs | Completed in current repo state | Micah / Codex |
 | Bootstrap skill and temporary scaffold script | Completed in current repo state | Micah / Codex |
-| Next workstream for CLI implementation | Next major milestone | Micah / Codex |
-| Dedicated CLI surface | Future phase | Micah / Codex |
+| Dedicated CLI surface | In progress in current repo state | Micah / Codex |
+| Lightweight patch lane | Next major milestone | Micah / Codex |
+| Interactive TUI mode | Future phase | Micah / Codex |
 
 ## 12. Open Questions
 
 - [ ] When should validation and export helpers split into their own skills, if ever?
 - [ ] How much of the eventual CLI should mirror the bootstrap skill exactly?
-- [ ] What is the first implementation-focused workstream after the bootstrap phase?
+- [ ] How should patches surface alongside workstreams in the first interactive TUI release?
 
 ## Appendix
 

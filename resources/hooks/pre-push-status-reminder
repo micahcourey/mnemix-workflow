@@ -9,6 +9,7 @@ import sys
 
 
 WORKSTREAM_RE = re.compile(r"^workflow/workstreams/([^/]+)/")
+PATCH_RE = re.compile(r"^workflow/patches/([^/]+\.md)$")
 ZERO_SHA = "0" * 40
 
 
@@ -65,6 +66,7 @@ def main() -> int:
         return 0
 
     touched_workstreams: set[str] = set()
+    touched_patches: set[str] = set()
 
     for line in sys.stdin.read().splitlines():
         parts = line.split()
@@ -75,14 +77,23 @@ def main() -> int:
             match = WORKSTREAM_RE.match(file_path)
             if match and not file_path.endswith("/STATUS.md"):
                 touched_workstreams.add(match.group(1))
+                continue
+            match = PATCH_RE.match(file_path)
+            if match:
+                touched_patches.add(match.group(1))
 
-    if not touched_workstreams:
+    if not touched_workstreams and not touched_patches:
         return 0
 
     print("Mnemix Workflow reminder:")
     for workstream in sorted(touched_workstreams):
         print(f"- Review workflow/workstreams/{workstream}/STATUS.md")
-    print("- If this push leads to a PR that completes the workstream, update STATUS.md to completed.")
+    for patch in sorted(touched_patches):
+        print(f"- Review workflow/patches/{patch}")
+    if touched_workstreams:
+        print("- If this push leads to a PR that completes the workstream, update STATUS.md to completed.")
+    if touched_patches:
+        print("- If this push leads to a PR that completes the patch, update its status to completed.")
     print("- Add `prs` metadata when the PR number is known.")
     return 0
 
