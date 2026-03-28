@@ -1,6 +1,6 @@
 # Decisions
 
-This folder holds durable, repo-level decisions for `mnemix-workflow`.
+This folder holds durable, repo-level decisions for this repository.
 
 Use this location when a decision:
 

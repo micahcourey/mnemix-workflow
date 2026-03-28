@@ -42,6 +42,13 @@ def format_id(value: int) -> str:
     return f"{value:03d}" if value <= 999 else str(value)
 
 
+def find_repo_root(start: Path) -> Path | None:
+    for candidate in (start, *start.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return None
+
+
 def copy_tree(src: Path, dst: Path, substitutions: dict[str, str]) -> None:
     dst.mkdir(parents=True, exist_ok=False)
     for item in src.rglob("*"):
@@ -65,10 +72,18 @@ def main() -> int:
     parser.add_argument("name", help="Human-readable workstream name")
     args = parser.parse_args()
 
-    repo_root = Path(__file__).resolve().parents[3]
-    templates_dir = (
-        repo_root / "resources" / "skills" / "mnemix-workflow" / "assets" / "workstream"
-    )
+    skill_root = Path(__file__).resolve().parents[1]
+    templates_dir = skill_root / "assets" / "workstream"
+    repo_root = find_repo_root(Path.cwd())
+
+    if repo_root is None:
+        print(
+            "Repository root not found from the current working directory."
+            " Run this command from inside a git repository or worktree.",
+            file=sys.stderr,
+        )
+        return 1
+
     workstreams_dir = repo_root / "workflow" / "workstreams"
 
     if not templates_dir.is_dir():

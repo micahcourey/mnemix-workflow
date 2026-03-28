@@ -38,5 +38,6 @@ Read `references/workstream-conventions.md` when you need:
 ## Notes
 
 - Use the scaffold script instead of recreating the folder structure by hand unless there is a good reason not to.
+- Run the scaffold script from inside the target repository or git worktree so new workstreams are created in the right checkout.
 - The numbering rule is `001` through `999`, then `1000+`; treat the numeric prefix as an integer, not a fixed-width string.
 - This skill is a temporary bridge to the future `mnemix workflow new` CLI command.

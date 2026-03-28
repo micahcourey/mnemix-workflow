@@ -77,9 +77,11 @@ There is no strong repo-native open standard for feature-level UX specifications
 
 ```text
 README.md
+Cargo.toml
 docs/
   methodology/
-  plans/
+src/
+tests/
 resources/
   skills/
     mnemix-workflow/
@@ -116,25 +118,49 @@ Then look at the existing workstreams:
 
 - [001 Bootstrap](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/001-bootstrap-mnemix-workflow/spec.md)
 - [002 Workflow Skill Bootstrap](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/002-workflow-skill-bootstrap/spec.md)
+- [003 CLI Bootstrap](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/003-cli-bootstrap/spec.md)
 
-### 2. Create A New Workstream
+### 2. Initialize A Repository
 
-Before the dedicated CLI exists, use the bootstrap skill:
+During local development, run the CLI directly:
 
 ```bash
-python3 resources/skills/mnemix-workflow/scripts/new-workstream.py "your workstream name"
+cargo run --bin mxw -- init
 ```
 
-Example:
+After packaging lands, the intended installed flow is:
 
 ```bash
-python3 resources/skills/mnemix-workflow/scripts/new-workstream.py "cli bootstrap"
+mxw init
+```
+
+This creates the minimum workflow domain:
+
+```text
+workflow/
+  decisions/
+    README.md
+  workstreams/
+```
+
+### 3. Create A New Workstream
+
+During local development:
+
+```bash
+cargo run --bin mxw -- new "user profile redesign"
+```
+
+Once installed:
+
+```bash
+mxw new "user profile redesign"
 ```
 
 This creates:
 
 ```text
-workflow/workstreams/<id>-cli-bootstrap/
+workflow/workstreams/<id>-user-profile-redesign/
   spec.md
   ux.md
   plan.md
@@ -143,7 +169,7 @@ workflow/workstreams/<id>-cli-bootstrap/
     README.md
 ```
 
-### 3. Fill In The Core Artifacts
+### 4. Fill In The Core Artifacts
 
 After scaffolding a workstream:
 
@@ -152,7 +178,7 @@ After scaffolding a workstream:
 3. Write `plan.md` to define the implementation approach.
 4. Write `tasks.md` to break the work into execution slices.
 
-### 4. Use The Skill Directly
+### 5. Use The Skill Directly
 
 The repository includes a real Agent Skills Open Standard skill at:
 
@@ -163,6 +189,8 @@ It bundles:
 - workstream templates in `assets/`
 - a scaffold script in `scripts/`
 - focused conventions in `references/`
+
+The skill remains a useful fallback while the Rust CLI is being packaged for release.
 
 ## Numbering Convention
 
@@ -183,5 +211,7 @@ The current implementation includes:
 - an initial framework plan
 - the first bootstrap workstream
 - a real bootstrap skill for creating new workstreams before the dedicated CLI exists
+- an implementation-focused workstream for the first Rust CLI slice
+- a working Rust CLI with `init` and `new` commands plus the `mxw` shorthand alias
 
-The next major step is implementing the dedicated CLI surface that eventually replaces the temporary scaffold script with `mnemix workflow new`.
+The next major step is packaging and releasing the CLI cleanly so the intended install flow, `pipx install mnemix-workflow`, becomes real for consuming projects.
