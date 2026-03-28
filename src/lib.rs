@@ -4,6 +4,7 @@ mod cli;
 mod commands;
 mod scaffold;
 mod status;
+mod tui;
 
 use std::{path::Path, process::ExitCode};
 

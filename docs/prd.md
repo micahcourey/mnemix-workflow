@@ -17,6 +17,13 @@
 
 This document is the living product document for the project. It replaces the earlier dated plan file and should be updated as the framework, CLI, and methodology evolve.
 
+The current repo state now includes:
+
+- workstream scaffolding
+- patch scaffolding
+- status metadata and status commands
+- an initial browse-first interactive TUI
+
 ## 2. Problem Statement
 
 ### Current State
@@ -112,6 +119,15 @@ Without a lightweight, teachable workflow layer:
   - Given tooling, When it determines the next id, Then it sorts numerically rather than lexicographically
 - **Priority**: Must Have
 
+### FR6: Interactive Terminal Workflow View
+- **Description**: The CLI should provide a browse-first interactive mode for viewing tracked workflow items.
+- **User Story**: As a maintainer or contributor, I want a terminal-native workflow cockpit, so that I can scan statuses and inspect artifacts faster than command-by-command shell usage.
+- **Acceptance Criteria**:
+  - Given an initialized repository, When a user runs `mxw ui`, Then they can browse workstreams and patches by status
+  - Given a selected item, When a user opens the preview pane, Then they can inspect the main workstream artifacts or patch file inside the terminal
+  - Given the v1 interactive mode, When a user wants a lightweight operational action, Then they can change the selected item's status without leaving the TUI
+- **Priority**: Should Have
+
 ## 6. Non-Functional Requirements
 
 | Category | Requirement | Target |
@@ -177,15 +193,15 @@ Not applicable for the initial repository-first experience. The primary experien
 |-----------|------------|-------|
 | Repository bootstrap and methodology docs | Completed in current repo state | Micah / Codex |
 | Bootstrap skill and temporary scaffold script | Completed in current repo state | Micah / Codex |
-| Dedicated CLI surface | In progress in current repo state | Micah / Codex |
-| Lightweight patch lane | Next major milestone | Micah / Codex |
-| Interactive TUI mode | Future phase | Micah / Codex |
+| Dedicated CLI surface | Completed in current repo state | Micah / Codex |
+| Lightweight patch lane | Completed in current repo state | Micah / Codex |
+| Interactive TUI mode | Completed as initial browse-first slice in current repo state | Micah / Codex |
 
 ## 12. Open Questions
 
 - [ ] When should validation and export helpers split into their own skills, if ever?
 - [ ] How much of the eventual CLI should mirror the bootstrap skill exactly?
-- [ ] How should patches surface alongside workstreams in the first interactive TUI release?
+- [ ] What should the next interactive slice be after browse-first TUI: richer inline actions, guided creation, or agent-assisted planning?
 
 ## Appendix
 

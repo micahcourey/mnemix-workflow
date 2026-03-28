@@ -261,7 +261,31 @@ mxw patch status set 0001 completed --pr 12
 mxw patch status list --status open
 ```
 
-### 7. Optional Local Hooks
+### 7. Browse Interactively
+
+Launch the browse-first terminal UI:
+
+```bash
+mxw ui
+```
+
+V1 of the TUI gives you:
+
+- status buckets for `proposed`, `open`, and `completed`
+- a unified tracked-item list for workstreams and patches
+- artifact preview for `STATUS.md`, `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
+- direct patch-file preview for patches
+- one lightweight operational action: press `s` to cycle the selected item's status
+
+Key controls:
+
+- `Tab` / `Shift+Tab` to move focus
+- `j` / `k` or arrow keys to move selection
+- `h` / `l` in preview to switch artifacts
+- `s` to cycle the selected item's status
+- `q` or `Esc` to quit
+
+### 8. Optional Local Hooks
 
 The repository includes optional local hook scripts under `resources/hooks/`:
 

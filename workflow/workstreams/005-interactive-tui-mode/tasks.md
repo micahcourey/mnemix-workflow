@@ -17,34 +17,34 @@ toward direct agent-assisted planning.
 
 ### Slice 2: Implement The Interactive Entry Point
 
-- [ ] Add a new interactive CLI command such as `mxw ui`
-- [ ] Add terminal setup, teardown, and event handling
-- [ ] Add a central TUI app state model
+- [x] Add a new interactive CLI command such as `mxw ui`
+- [x] Add terminal setup, teardown, and event handling
+- [x] Add a central TUI app state model
 
 ### Slice 3: Build The Browse Experience
 
-- [ ] Render status buckets and tracked-item lists
-- [ ] Render artifact preview for workstream artifacts and patch files
-- [ ] Add keyboard navigation and scrolling
+- [x] Render status buckets and tracked-item lists
+- [x] Render artifact preview for workstream artifacts and patch files
+- [x] Add keyboard navigation and scrolling
 
 ### Slice 4: Add Lightweight Actions
 
-- [ ] Add one or two small workflow actions to prove the TUI can evolve beyond read-only browsing
-- [ ] Keep those actions aligned with existing CLI behavior
+- [x] Add one or two small workflow actions to prove the TUI can evolve beyond read-only browsing
+- [x] Keep those actions aligned with existing CLI behavior
 
 ### Slice 5: Verify And Document
 
-- [ ] Add tests for TUI entry and core state behavior where practical
-- [ ] Update the README with the interactive mode
-- [ ] Document keyboard usage and the v1 scope clearly
+- [x] Add tests for TUI entry and core state behavior where practical
+- [x] Update the README with the interactive mode
+- [x] Document keyboard usage and the v1 scope clearly
 
 ## Validation Checklist
 
-- [ ] A user can launch an interactive mode from `mxw`
-- [ ] A user can browse workstreams and patches by status
-- [ ] A user can preview the main workstream artifacts and patch files inside the terminal
-- [ ] The architecture leaves a clear path for later direct agent-assisted planning
-- [ ] The v1 scope remains intentionally smaller than a full terminal agent shell
+- [x] A user can launch an interactive mode from `mxw`
+- [x] A user can browse workstreams and patches by status
+- [x] A user can preview the main workstream artifacts and patch files inside the terminal
+- [x] The architecture leaves a clear path for later direct agent-assisted planning
+- [x] The v1 scope remains intentionally smaller than a full terminal agent shell
 
 ## Notes
 
