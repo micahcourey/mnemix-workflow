@@ -4,6 +4,7 @@ mod cli;
 mod commands;
 mod scaffold;
 mod status;
+mod tui;
 
 use std::{path::Path, process::ExitCode};
 
@@ -39,6 +40,25 @@ pub fn run() -> ExitCode {
             }
             ExitCode::SUCCESS
         }
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+/// Run the interactive TUI directly, as used by the `mnx` shortcut binary.
+pub fn run_ui_shortcut() -> ExitCode {
+    let cwd = match std::env::current_dir() {
+        Ok(cwd) => cwd,
+        Err(error) => {
+            eprintln!("Failed to determine the current working directory: {error}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    match commands::execute(crate::cli::Command::Ui, "mnx", &cwd) {
+        Ok(_) => ExitCode::SUCCESS,
         Err(error) => {
             eprintln!("{error}");
             ExitCode::FAILURE

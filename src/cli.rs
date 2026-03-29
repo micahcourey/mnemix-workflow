@@ -17,6 +17,8 @@ pub(crate) enum Command {
     Init,
     /// Create a new workstream in an initialized repository
     New(NewArgs),
+    /// Open the interactive terminal UI
+    Ui,
     /// Create or inspect lightweight tracked patches
     Patch(PatchArgs),
     /// Read or update workstream status metadata
