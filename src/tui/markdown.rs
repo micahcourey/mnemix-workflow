@@ -3,6 +3,7 @@ use ratatui::{
     style::{Color, Modifier, Style},
     text::{Line, Span, Text},
 };
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 #[derive(Clone, Debug)]
 enum ListKind {
@@ -10,9 +11,12 @@ enum ListKind {
     Ordered(u64),
 }
 
-pub(crate) fn render_markdown(content: &str) -> Text<'static> {
+pub(crate) fn render_markdown(content: &str, width: usize) -> Text<'static> {
     let parser = Parser::new(content);
-    let mut renderer = MarkdownRenderer::default();
+    let mut renderer = MarkdownRenderer {
+        code_block_width: width.max(8),
+        ..Default::default()
+    };
     renderer.render(parser);
     Text::from(renderer.finish())
 }
@@ -26,6 +30,7 @@ struct MarkdownRenderer {
     item_prefix: Option<String>,
     heading_level: Option<HeadingLevel>,
     code_block: bool,
+    code_block_width: usize,
     code_block_language: Option<String>,
     strong_depth: usize,
     emphasis_depth: usize,
@@ -87,6 +92,7 @@ impl MarkdownRenderer {
                 };
                 self.lines.push(code_block_header(
                     self.code_block_language.as_deref(),
+                    self.code_block_width,
                 ));
             }
             Tag::Strong => self.strong_depth += 1,
@@ -122,7 +128,7 @@ impl MarkdownRenderer {
             TagEnd::Item => self.push_current_line(),
             TagEnd::CodeBlock => {
                 self.push_current_line();
-                self.lines.push(code_block_footer());
+                self.lines.push(code_block_footer(self.code_block_width));
                 self.push_blank_line();
                 self.code_block = false;
                 self.code_block_language = None;
@@ -137,7 +143,11 @@ impl MarkdownRenderer {
     fn push_text(&mut self, text: &str) {
         if self.code_block {
             for line in text.split_terminator('\n') {
-                self.lines.push(code_block_line(line));
+                for wrapped in wrap_code_chunks(line, code_block_inner_width(self.code_block_width))
+                {
+                    self.lines
+                        .push(code_block_line(&wrapped, self.code_block_width));
+                }
             }
             return;
         }
@@ -177,7 +187,9 @@ impl MarkdownRenderer {
         if !prefix.is_empty() {
             self.current.push(Span::styled(
                 prefix,
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
             ));
         }
     }
@@ -258,14 +270,16 @@ fn heading_style(level: HeadingLevel) -> Style {
     }
 }
 
-fn code_block_header(language: Option<&str>) -> Line<'static> {
+fn code_block_header(language: Option<&str>, width: usize) -> Line<'static> {
     let label = match language {
-        Some(language) => format!("┌ code: {language}"),
-        None => "┌ code".to_owned(),
+        Some(language) => format!("┌ code: {language} "),
+        None => "┌ code ".to_owned(),
     };
+    let line = fill_to_width(label, '─', width.saturating_sub(1));
+    let content = format!("{line}┐");
 
     Line::from(vec![Span::styled(
-        label,
+        content,
         Style::default()
             .fg(Color::Yellow)
             .bg(Color::DarkGray)
@@ -273,22 +287,75 @@ fn code_block_header(language: Option<&str>) -> Line<'static> {
     )])
 }
 
-fn code_block_line(line: &str) -> Line<'static> {
+fn code_block_line(line: &str, width: usize) -> Line<'static> {
     let style = Style::default().fg(Color::Green).bg(Color::DarkGray);
-    Line::from(vec![
-        Span::styled("│ ", style),
-        Span::styled(line.to_owned(), style),
-    ])
+    let content_width = code_block_inner_width(width);
+    let padded = pad_to_width(line, content_width);
+    let content = format!("│ {padded} │");
+    Line::from(vec![Span::styled(content, style)])
 }
 
-fn code_block_footer() -> Line<'static> {
+fn code_block_footer(width: usize) -> Line<'static> {
+    let content = format!("└{}┘", "─".repeat(width.saturating_sub(2)));
     Line::from(vec![Span::styled(
-        "└",
+        content,
         Style::default()
             .fg(Color::Yellow)
             .bg(Color::DarkGray)
             .add_modifier(Modifier::BOLD),
     )])
+}
+
+fn code_block_inner_width(width: usize) -> usize {
+    width.saturating_sub(4)
+}
+
+fn wrap_code_chunks(line: &str, max_width: usize) -> Vec<String> {
+    if max_width == 0 {
+        return vec![String::new()];
+    }
+
+    if line.is_empty() {
+        return vec![String::new()];
+    }
+
+    let mut chunks = Vec::new();
+    let mut current = String::new();
+    let mut current_width = 0;
+
+    for ch in line.chars() {
+        let ch_width = UnicodeWidthChar::width(ch).unwrap_or(1).max(1);
+        if current_width + ch_width > max_width && !current.is_empty() {
+            chunks.push(current);
+            current = String::new();
+            current_width = 0;
+        }
+        current.push(ch);
+        current_width += ch_width;
+    }
+
+    if !current.is_empty() {
+        chunks.push(current);
+    }
+
+    chunks
+}
+
+fn fill_to_width(mut content: String, fill: char, target_width: usize) -> String {
+    let current_width = UnicodeWidthStr::width(content.as_str());
+    if current_width < target_width {
+        content.push_str(&fill.to_string().repeat(target_width - current_width));
+    }
+    content
+}
+
+fn pad_to_width(content: &str, target_width: usize) -> String {
+    let mut padded = content.to_owned();
+    let current_width = UnicodeWidthStr::width(content);
+    if current_width < target_width {
+        padded.push_str(&" ".repeat(target_width - current_width));
+    }
+    padded
 }
 
 #[cfg(test)]
@@ -299,7 +366,7 @@ mod tests {
 
     #[test]
     fn renders_headings_and_lists() {
-        let text = render_markdown("# Title\n\n- item one\n- item two");
+        let text = render_markdown("# Title\n\n- item one\n- item two", 40);
         assert_eq!(text.lines[0].spans[0].content.as_ref(), "Title");
         assert!(text.lines[0].style.add_modifier.contains(Modifier::BOLD));
         assert!(text.lines[2].to_string().contains("• item one"));
@@ -308,21 +375,37 @@ mod tests {
 
     #[test]
     fn renders_blockquotes_and_code_fences() {
-        let text = render_markdown("> quoted\n\n```rs\nlet x = 1;\n```");
+        let text = render_markdown("> quoted\n\n```rs\nlet x = 1;\n```", 24);
         assert!(text.lines[0].to_string().contains("> quoted"));
-        assert_eq!(text.lines[2].to_string(), "┌ code: rs");
-        assert_eq!(text.lines[3].to_string(), "│ let x = 1;");
+        assert_eq!(text.lines[2].width(), 24);
+        assert_eq!(text.lines[3].width(), 24);
+        assert_eq!(text.lines[4].width(), 24);
+        assert!(text.lines[2].to_string().starts_with("┌ code: rs "));
+        assert!(text.lines[3].to_string().starts_with("│ let x = 1;"));
+        assert!(text.lines[3].to_string().ends_with("│"));
         assert_eq!(text.lines[3].spans[0].style.bg, Some(Color::DarkGray));
-        assert_eq!(text.lines[3].spans[1].style.fg, Some(Color::Green));
-        assert_eq!(text.lines[4].to_string(), "└");
+        assert_eq!(text.lines[3].spans[0].style.fg, Some(Color::Green));
+        assert!(text.lines[4].to_string().starts_with("└"));
     }
 
     #[test]
     fn renders_inline_code_and_emphasis() {
-        let text = render_markdown("Use `mxw` and *readable* output.");
+        let text = render_markdown("Use `mxw` and *readable* output.", 40);
         let line = &text.lines[0];
         assert!(line.to_string().contains("Use mxw and readable output."));
         assert_eq!(line.spans[1].style.fg, Some(Color::Yellow));
         assert!(line.spans[3].style.add_modifier.contains(Modifier::ITALIC));
+    }
+
+    #[test]
+    fn wraps_long_code_lines_inside_the_block_width() {
+        let text = render_markdown(
+            "```ts\nconst reallyLongIdentifier = veryLongCallChain();\n```",
+            24,
+        );
+        assert_eq!(text.lines[1].width(), 24);
+        assert_eq!(text.lines[2].width(), 24);
+        assert!(text.lines[1].to_string().starts_with("│ "));
+        assert!(text.lines[2].to_string().starts_with("│ "));
     }
 }

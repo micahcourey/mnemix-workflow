@@ -133,9 +133,10 @@ fn render_preview(frame: &mut Frame, state: &AppState, area: ratatui::layout::Re
         .borders(Borders::ALL)
         .border_style(border_style(state.focus == FocusPane::Preview));
     let content = read_artifact(item, artifact);
+    let preview_width = area.width.saturating_sub(2) as usize;
 
     frame.render_widget(
-        Paragraph::new(render_markdown(&content))
+        Paragraph::new(render_markdown(&content, preview_width))
             .block(preview_block)
             .wrap(Wrap { trim: false })
             .scroll((state.scroll, 0)),

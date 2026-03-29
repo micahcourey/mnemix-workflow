@@ -44,6 +44,42 @@ patches inside the TUI.
 - Verify code block contents remain readable in narrow terminal widths
 - Run the Rust test suite and confirm Markdown renderer tests pass
 
+## Example Blocks
+
+```ts
+export function createWorkstreamSlug(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+```
+
+```rust
+pub fn next_status(current: &str) -> &'static str {
+    match current {
+        "proposed" => "open",
+        "open" => "completed",
+        _ => "proposed",
+    }
+}
+```
+
+```python
+def summarize_patch(title: str, pr_number: int) -> str:
+    return f"{title} shipped in PR #{pr_number}"
+```
+
+```json
+{
+  "status": "completed",
+  "summary": "Styled fenced Markdown code blocks as distinct terminal blocks in mnx.",
+  "updated": "2026-03-29",
+  "prs": [11]
+}
+```
+
 ## References
 
 - `workflow/patches/0001-formatted-markdown-preview-in-mnx.md`
