@@ -14,6 +14,17 @@ It combines:
 The result is a spec-driven workflow that stays readable to humans, operable by
 agents, and grounded in normal repository files instead of hidden metadata.
 
+At the methodology level, it gives teams a lightweight path from:
+
+- `spec.md` for problem and intent
+- `ux.md` for experience and behavior
+- `plan.md` for implementation approach
+- `tasks.md` for execution slices
+- `STATUS.md` for current state and PR linkage
+
+For the full method and naming model, see the
+[Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md).
+
 ## Why It Exists
 
 AI coding gets much more reliable when requirements, UX intent, execution
@@ -184,6 +195,19 @@ Every pull request should map to either:
 
 - a full `workstream`
 - a lightweight `patch`
+
+In practice, the methodology is meant to help humans and agents align before
+implementation starts:
+
+- `spec.md` captures what should be built and why
+- `ux.md` captures how it should feel and behave
+- `plan.md` captures how the implementation will be approached
+- `tasks.md` captures the execution slices and verification steps
+- `STATUS.md` captures whether the work is proposed, open, or completed
+
+For a fuller explanation of the method, terminology, and repository shape, see
+the
+[Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md).
 
 ### Core Artifacts
 
