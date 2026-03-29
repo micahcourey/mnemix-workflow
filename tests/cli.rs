@@ -45,6 +45,8 @@ fn help_lists_ui_command() {
         .assert()
         .success()
         .stdout(contains("ui"))
+        .stdout(contains("hooks"))
+        .stdout(contains("validate"))
         .stdout(contains("openapi"))
         .stdout(contains("asyncapi"))
         .stdout(contains("schema"));
@@ -978,4 +980,140 @@ fn pre_push_hook_warns_for_touched_patches() {
         .stdout(contains(
             "If this push leads to a PR that completes the patch, update its status to completed.",
         ));
+}
+
+#[test]
+fn hooks_install_writes_bundled_git_hooks() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["hooks", "install"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Installed Mnemix Workflow git hooks."));
+
+    let pre_commit = temp_dir.path().join(".git/hooks/pre-commit");
+    let pre_push = temp_dir.path().join(".git/hooks/pre-push");
+    assert!(pre_commit.is_file());
+    assert!(pre_push.is_file());
+
+    let installed_pre_commit = fs::read_to_string(&pre_commit).expect("read pre-commit");
+    let bundled_pre_commit =
+        fs::read_to_string(hook_path("pre-commit-status-updated")).expect("read bundled pre-commit");
+    assert_eq!(installed_pre_commit, bundled_pre_commit);
+
+    let installed_pre_push = fs::read_to_string(&pre_push).expect("read pre-push");
+    let bundled_pre_push =
+        fs::read_to_string(hook_path("pre-push-status-reminder")).expect("read bundled pre-push");
+    assert_eq!(installed_pre_push, bundled_pre_push);
+}
+
+#[test]
+fn validate_checks_repository_status_and_contracts() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "contract sweep"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix docs copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["openapi", "init", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["schema", "new", "001", "payload"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("validate")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Repository validation passed."))
+        .stdout(contains("Workstreams checked: 1"))
+        .stdout(contains("Patches checked: 1"))
+        .stdout(contains("Contracts checked: 2"));
+}
+
+#[test]
+fn validate_accepts_specific_workstream_and_patch_targets() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "contract sweep"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix docs copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["openapi", "init", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["validate", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Validated workstream: 001-contract-sweep"))
+        .stdout(contains("Contracts checked: 1"));
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["validate", "0001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Validated patch: 0001-fix-docs-copy"));
 }

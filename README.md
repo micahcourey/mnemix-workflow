@@ -47,27 +47,29 @@ history.
 
 ## Install
 
-Today the most reliable local-development path is:
-
-```bash
-cargo run --bin mxw -- --help
-```
-
-Shortcut into the interactive UI during local development:
-
-```bash
-cargo run --bin mnx --
-```
-
-The intended packaged install experience is:
+Packaged install:
 
 ```bash
 pipx install mnemix-workflow
 ```
 
-That packaged distribution is not the default local-dev path yet, so the README
-below uses `cargo run` for development examples and `mxw` / `mnx` for the
-installed mental model.
+or:
+
+```bash
+pip install mnemix-workflow
+```
+
+This exposes three entrypoints:
+
+- `mnemix-workflow` for the canonical CLI
+- `mxw` for the shorter command-oriented alias
+- `mnx` for the direct interactive TUI shortcut
+
+Local development still works through Cargo when you are hacking on the repo:
+
+```bash
+cargo run --bin mxw -- --help
+```
 
 ## Quickstart
 
@@ -151,7 +153,33 @@ mxw status list --status completed
 mxw patch status list --status open
 ```
 
-### 4. Launch The Interactive UI
+### 4. Install Optional Git Hooks
+
+```bash
+mxw hooks install
+```
+
+This installs:
+
+- a `pre-commit` hook that refreshes the `updated` field for touched workstreams and patches
+- a `pre-push` hook that reminds you to review status and PR linkage before opening or updating a PR
+
+### 5. Validate Tracked Workflow State
+
+Validate the whole repository:
+
+```bash
+mxw validate
+```
+
+Or validate one tracked item:
+
+```bash
+mxw validate 008
+mxw validate 0001
+```
+
+### 6. Launch The Interactive UI
 
 The fastest way into the product experience is:
 
@@ -324,6 +352,7 @@ Start with:
 
 - [Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md)
 - [Product Requirements Document](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/prd.md)
+- [Release Checklist](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/release-checklist.md)
 - [Bootstrap Workstream 001](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/001-bootstrap-mnemix-workflow/spec.md)
 - [CLI Bootstrap Workstream 003](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/003-cli-bootstrap/spec.md)
 
@@ -342,6 +371,9 @@ The current implementation includes:
 - status metadata and PR linkage
 - browse-first TUI access via `mnx`
 - contract scaffolding and validation for `OpenAPI`, `AsyncAPI`, and `JSON Schema`
+- packaged install support for `pip` and `pipx`
+- local hook installation via `mxw hooks install`
+- umbrella repo validation via `mxw validate`
 
 ## Numbering Convention
 

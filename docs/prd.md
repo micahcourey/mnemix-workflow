@@ -23,6 +23,9 @@ The current repo state now includes:
 - patch scaffolding
 - status metadata and status commands
 - an initial browse-first interactive TUI
+- packaged Python distribution support for `pip` and `pipx`
+- optional git hook installation
+- umbrella workflow validation
 
 ## 2. Problem Statement
 
@@ -175,6 +178,8 @@ Not applicable for the initial repository-first experience. The primary experien
 - [ ] The workflow skill reflects the shipped CLI-first workflow accurately
 - [ ] `001` and `002` workstreams clearly document the initial methodology and bootstrap path
 - [ ] The CLI can scaffold the primary tracked units the methodology teaches
+- [ ] The packaged install exposes `mnemix-workflow`, `mxw`, and `mnx`
+- [ ] The repo includes a maintainer-facing release checklist and publish workflow
 
 ## 9.1 Contract Standards Scope
 

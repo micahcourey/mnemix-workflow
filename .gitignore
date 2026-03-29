@@ -1,2 +1,9 @@
 /target/
 __pycache__/
+/python/.venv/
+/python/.release-venv/
+/python/.build-wheel-venv/
+/python/.bundled-wheel-venv/
+/python/build/
+/python/dist/
+/python/*.egg-info/
