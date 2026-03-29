@@ -77,6 +77,29 @@ Use a patch when:
 
 Patch files use the same frontmatter fields directly in the patch file itself.
 
+## Optional Contract Standards
+
+When a workstream needs machine-readable contracts, keep them inside the
+workstream:
+
+```text
+workflow/workstreams/<id>-<slug>/
+  contracts/
+    openapi.yaml
+    asyncapi.yaml
+    schemas/
+      some-shape.schema.json
+```
+
+Use:
+
+- `OpenAPI` for HTTP APIs
+- `AsyncAPI` for async channels or operations
+- `JSON Schema` for reusable data shapes
+
+These artifacts are optional and should only be added when the workstream
+actually needs them.
+
 ## Planning Expectations
 
 - Resolve important planning questions while creating the workstream instead of deferring them into a generic `Open Questions` section

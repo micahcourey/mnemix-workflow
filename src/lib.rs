@@ -2,6 +2,7 @@
 
 mod cli;
 mod commands;
+mod contracts;
 mod scaffold;
 mod status;
 mod tui;

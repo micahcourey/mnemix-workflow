@@ -135,7 +135,7 @@ Without a lightweight, teachable workflow layer:
 | Simplicity | The common-case workflow should stay small | Four core artifacts plus optional `decisions/` |
 | Clarity | File and folder names should be easy to understand | New contributors can navigate the repo without deep onboarding |
 | Tool Neutrality | The framework should not require one editor or vendor environment | Repo artifacts remain normal Markdown and scripts |
-| Interoperability | Use open standards selectively where they help | MADR, OpenAPI, AsyncAPI, JSON Schema, Structurizr DSL are optional by layer |
+| Interoperability | Use open standards selectively where they help | OpenAPI, AsyncAPI, and JSON Schema are the supported contract standards |
 | Maintainability | The bootstrap path should be replaceable by the CLI later | Bootstrap skill mirrors the intended future CLI mental model |
 
 ## 7. User Experience
@@ -177,6 +177,18 @@ Not applicable for the initial repository-first experience. The primary experien
 - [ ] `001` and `002` workstreams clearly document the initial methodology and bootstrap path
 - [ ] The CLI can scaffold the primary tracked units the methodology teaches
 
+## 9.1 Contract Standards Scope
+
+The framework's supported standards scope is intentionally narrow:
+
+- `OpenAPI` for HTTP API contracts
+- `AsyncAPI` for event-driven contracts
+- `JSON Schema` for shared data shapes and reusable payload models
+
+These standards are the contract-focused standards layer in the current
+product. Decisions, architecture, and UX remain repo-native artifacts unless a
+later workstream introduces more formal integrations.
+
 ## 10. Risks & Mitigations
 
 | Risk | Impact | Likelihood | Mitigation |
@@ -196,6 +208,7 @@ Not applicable for the initial repository-first experience. The primary experien
 | Dedicated CLI surface | Completed in current repo state | Micah / Codex |
 | Lightweight patch lane | Completed in current repo state | Micah / Codex |
 | Interactive TUI mode | Completed as initial browse-first slice in current repo state | Micah / Codex |
+| Contract standards support | Completed as initial scaffold-and-validate slice in current repo state | Micah / Codex |
 
 ## 12. Open Questions
 

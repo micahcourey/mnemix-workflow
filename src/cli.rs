@@ -17,6 +17,12 @@ pub(crate) enum Command {
     Init,
     /// Create a new workstream in an initialized repository
     New(NewArgs),
+    /// Scaffold or validate OpenAPI contracts
+    Openapi(OpenApiArgs),
+    /// Scaffold or validate AsyncAPI contracts
+    Asyncapi(AsyncApiArgs),
+    /// Scaffold or validate JSON Schema artifacts
+    Schema(SchemaArgs),
     /// Open the interactive terminal UI
     Ui,
     /// Create or inspect lightweight tracked patches
@@ -28,6 +34,60 @@ pub(crate) enum Command {
 #[derive(Args, Debug)]
 pub(crate) struct NewArgs {
     /// Human-readable workstream name
+    pub(crate) name: String,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct OpenApiArgs {
+    #[command(subcommand)]
+    pub(crate) action: ContractAction,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct AsyncApiArgs {
+    #[command(subcommand)]
+    pub(crate) action: ContractAction,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum ContractAction {
+    /// Scaffold the standard contract artifact for a workstream
+    Init(ContractInitArgs),
+    /// Validate a contract file or the default contract artifact for a workstream
+    Validate(ContractValidateArgs),
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct ContractInitArgs {
+    /// Workstream id or folder name
+    pub(crate) workstream: String,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct ContractValidateArgs {
+    /// Workstream id, folder name, or explicit contract file path
+    pub(crate) target: String,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct SchemaArgs {
+    #[command(subcommand)]
+    pub(crate) action: SchemaAction,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum SchemaAction {
+    /// Create a new JSON Schema artifact for a workstream
+    New(SchemaNewArgs),
+    /// Validate one schema file or all schemas for a workstream
+    Validate(ContractValidateArgs),
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct SchemaNewArgs {
+    /// Workstream id or folder name
+    pub(crate) workstream: String,
+    /// Human-readable schema name
     pub(crate) name: String,
 }
 

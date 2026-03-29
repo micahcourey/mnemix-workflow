@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/{{WORKSTREAM_SLUG}}/{{SCHEMA_SLUG}}.schema.json",
+  "title": "{{SCHEMA_TITLE}}",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
