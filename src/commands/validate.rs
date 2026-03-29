@@ -56,7 +56,10 @@ fn validate_target(repo_root: &Path, target: &str) -> Result<Vec<String>> {
     if let Ok(patch) = resolve_tracked_path(repo_root, target, TrackedKind::Patch) {
         validate_patch(&patch)?;
         return Ok(vec![
-            format!("Validated patch: {}", TrackedKind::Patch.display_name(&patch)),
+            format!(
+                "Validated patch: {}",
+                TrackedKind::Patch.display_name(&patch)
+            ),
             "Status metadata: OK".to_owned(),
         ]);
     }
@@ -66,7 +69,11 @@ fn validate_target(repo_root: &Path, target: &str) -> Result<Vec<String>> {
     );
 }
 
-fn validate_workstream(repo_root: &Path, workstream_path: &Path, contract_count: &mut usize) -> Result<()> {
+fn validate_workstream(
+    repo_root: &Path,
+    workstream_path: &Path,
+    contract_count: &mut usize,
+) -> Result<()> {
     let status_path = TrackedKind::Workstream.status_path(workstream_path);
     StatusFile::read(&status_path)?;
 

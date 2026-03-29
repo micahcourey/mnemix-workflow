@@ -19,14 +19,10 @@ pub(crate) fn install_hooks(repo_root: &Path, force: bool) -> Result<Vec<Install
     fs::create_dir_all(&hooks_dir)
         .with_context(|| format!("Failed to create {}", hooks_dir.display()))?;
 
-    let mut result = Vec::new();
-    result.push(install_hook(
-        &hooks_dir.join("pre-commit"),
-        PRE_COMMIT_HOOK,
-        force,
-    )?);
-    result.push(install_hook(&hooks_dir.join("pre-push"), PRE_PUSH_HOOK, force)?);
-    Ok(result)
+    Ok(vec![
+        install_hook(&hooks_dir.join("pre-commit"), PRE_COMMIT_HOOK, force)?,
+        install_hook(&hooks_dir.join("pre-push"), PRE_PUSH_HOOK, force)?,
+    ])
 }
 
 fn git_hooks_dir(repo_root: &Path) -> Result<PathBuf> {
@@ -90,7 +86,8 @@ fn install_hook(destination: &Path, content: &str, force: bool) -> Result<Instal
 fn set_executable(path: &Path) -> Result<()> {
     use std::os::unix::fs::PermissionsExt;
 
-    let metadata = fs::metadata(path).with_context(|| format!("Failed to stat {}", path.display()))?;
+    let metadata =
+        fs::metadata(path).with_context(|| format!("Failed to stat {}", path.display()))?;
     let mut permissions = metadata.permissions();
     permissions.set_mode(0o755);
     fs::set_permissions(path, permissions)
