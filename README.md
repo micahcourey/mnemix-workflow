@@ -22,8 +22,14 @@ At the methodology level, it gives teams a lightweight path from:
 - `tasks.md` for execution slices
 - `STATUS.md` for current state and PR linkage
 
-For the full method and naming model, see the
-[Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md).
+It also gives teams a simple planning rule:
+
+- use a `workstream` for larger, multi-artifact work
+- use a `patch` for smaller tracked changes that still need repo-visible planning
+- record durable repo-shaping choices in `workflow/decisions/`
+
+For the full method, terminology, and repository shape, see the
+[Methodology Naming System](docs/methodology/naming-system.md).
 
 ## Why It Exists
 
@@ -191,6 +197,12 @@ The core idea is simple:
 > A workflow is made of workstreams. Each workstream moves from spec to UX to
 > plan to tasks, with decisions recorded when they become durable.
 
+That methodology is intentionally trying to solve a specific problem:
+
+- humans need a clear narrative of intent, scope, and tradeoffs
+- AI agents need explicit artifacts they can read, update, and validate
+- teams need progress and status to live in the repo instead of only in chat or PR threads
+
 Every pull request should map to either:
 
 - a full `workstream`
@@ -205,9 +217,17 @@ implementation starts:
 - `tasks.md` captures the execution slices and verification steps
 - `STATUS.md` captures whether the work is proposed, open, or completed
 
-For a fuller explanation of the method, terminology, and repository shape, see
-the
-[Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md).
+### Planning Lanes
+
+- `workflow/workstreams/` holds larger planned initiatives with the full artifact set
+- `workflow/patches/` holds lightweight tracked changes in a single file
+- `workflow/decisions/` holds durable decisions that outlive any one workstream or patch
+
+This keeps the framework lightweight by default without allowing untracked PRs.
+
+For a fuller explanation of the method, terminology, repository shape, and
+teaching vocabulary, see the
+[Methodology Naming System](docs/methodology/naming-system.md).
 
 ### Core Artifacts
 
