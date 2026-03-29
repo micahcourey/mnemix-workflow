@@ -646,6 +646,7 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "tempfile",
+ "unicode-width 0.2.0",
 ]
 
 [[package]]
