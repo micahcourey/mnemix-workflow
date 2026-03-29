@@ -1,7 +1,10 @@
 ---
-status: open
-summary: Workflow Skill Cli Cleanup is active and ready for implementation.
+status: completed
+summary: Updated the workflow skill and docs to be fully CLI-first and removed the old scaffold script.
 updated: 2026-03-29
+prs:
+- 12
+
 ---
 
 # Patch: Workflow Skill Cli Cleanup
