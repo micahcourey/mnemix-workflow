@@ -314,6 +314,7 @@ V1 of the TUI gives you:
 - status buckets for `proposed`, `open`, and `completed`
 - a unified tracked-item list for workstreams and patches
 - artifact preview for `STATUS.md`, `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
+- basic Markdown formatting in the preview pane for headings, lists, blockquotes, code fences, and simple emphasis
 - direct patch-file preview for patches
 - one lightweight operational action: press `s` to cycle the selected item's status
 
