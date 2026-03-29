@@ -19,7 +19,7 @@ The framework is designed to stay small in the common case, make UX first-class,
 - Make planning artifacts readable to humans and operable by AI agents
 - Preserve a clear narrative from problem to implementation
 - Make UX a first-class planning artifact instead of burying it inside generic specs
-- Use open standards selectively for decisions, contracts, and architecture
+- Use open standards selectively for API and data contracts
 - Stay repo-native and tool-neutral
 - Provide a smooth path from bootstrap tooling to a future dedicated CLI
 
@@ -77,15 +77,17 @@ You do not need every possible layer for every feature. The four core files are 
 
 ## Open Standards
 
-`mnemix-workflow` does not try to replace standards that already work well. It uses them by layer when they are helpful:
+`mnemix-workflow` does not try to replace standards that already work well. Its
+first-class standards support is intentionally focused on three contract
+standards where machine-readable artifacts add clear value:
 
-- `MADR` for durable decisions
 - `OpenAPI` for HTTP interfaces
 - `AsyncAPI` for event-driven interfaces
 - `JSON Schema` for shared data shapes
-- `Structurizr DSL` for architecture when needed
 
-There is no strong repo-native open standard for feature-level UX specifications, which is why `ux.md` is a first-party Mnemix artifact.
+Decisions and architecture remain repo-native by default. There is no strong
+repo-native open standard for feature-level UX specifications, which is why
+`ux.md` is a first-party Mnemix artifact.
 
 ## Repository Layout
 
@@ -261,7 +263,39 @@ mxw patch status set 0001 completed --pr 12
 mxw patch status list --status open
 ```
 
-### 7. Browse Interactively
+### 7. Use Contract Standards When Needed
+
+When a workstream needs machine-readable contracts, add them under that
+workstream's `contracts/` folder.
+
+For REST or HTTP APIs:
+
+```bash
+mxw openapi init 007
+mxw openapi validate 007
+```
+
+For event-driven or message-based interfaces:
+
+```bash
+mxw asyncapi init 007
+mxw asyncapi validate 007
+```
+
+For shared data shapes:
+
+```bash
+mxw schema new 007 "repository event"
+mxw schema validate 007
+```
+
+Use:
+
+- `OpenAPI` for synchronous HTTP interfaces
+- `AsyncAPI` for async channels or operations
+- `JSON Schema` for reusable payload and document shapes
+
+### 8. Browse Interactively
 
 Launch the browse-first terminal UI:
 
@@ -294,7 +328,7 @@ Key controls:
 - `s` to cycle the selected item's status
 - `q` or `Esc` to quit
 
-### 8. Optional Local Hooks
+### 9. Optional Local Hooks
 
 The repository includes optional local hook scripts under `resources/hooks/`:
 
@@ -306,7 +340,7 @@ The repository includes optional local hook scripts under `resources/hooks/`:
 
 These hooks are local nudges, not the source of truth. Final semantic status should still land through the normal PR flow.
 
-### 7. Use The Skill Directly
+### 10. Use The Skill Directly
 
 The repository includes a real Agent Skills Open Standard skill at:
 

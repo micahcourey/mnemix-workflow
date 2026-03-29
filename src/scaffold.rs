@@ -219,7 +219,7 @@ fn format_id(value: u32, width: usize) -> String {
     }
 }
 
-fn slugify(value: &str) -> String {
+pub(crate) fn slugify(value: &str) -> String {
     let mut slug = String::new();
     let mut last_was_dash = false;
 

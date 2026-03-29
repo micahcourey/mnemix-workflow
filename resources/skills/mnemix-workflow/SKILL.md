@@ -13,6 +13,7 @@ artifacts in this repository or another repository using the same conventions.
 - the standard workstream artifact set
 - the lightweight patch lane
 - the numbering and naming rules for workstreams and patches
+- optional contract artifacts for `OpenAPI`, `AsyncAPI`, and `JSON Schema`
 
 ## Default Workflow
 
@@ -51,3 +52,4 @@ Read `references/workstream-conventions.md` when you need:
 - `STATUS.md` frontmatter should use `status`, `summary`, and `updated` as required fields, with optional `prs` for linked pull request numbers.
 - Patches are single files under `workflow/patches/` and carry the same frontmatter metadata directly in the patch file.
 - Every PR should map to either a workstream or a patch.
+- When work touches HTTP APIs, async interfaces, or reusable data shapes, use `mxw openapi`, `mxw asyncapi`, or `mxw schema` to scaffold and validate contract artifacts under the workstream's `contracts/` folder.

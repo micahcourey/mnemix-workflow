@@ -44,7 +44,10 @@ fn help_lists_ui_command() {
         .arg("--help")
         .assert()
         .success()
-        .stdout(contains("ui"));
+        .stdout(contains("ui"))
+        .stdout(contains("openapi"))
+        .stdout(contains("asyncapi"))
+        .stdout(contains("schema"));
 }
 
 #[test]
@@ -226,6 +229,118 @@ fn patch_new_backfills_missing_patches_dir() {
         .stdout(contains("workflow/patches/0001-fix-status-copy.md"));
 
     assert!(temp_dir.path().join("workflow/patches").is_dir());
+}
+
+#[test]
+fn openapi_init_and_validate_workstream_contract() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "api contracts"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["openapi", "init", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains(
+            "workflow/workstreams/001-api-contracts/contracts/openapi.yaml",
+        ));
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["openapi", "validate", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Validated OpenAPI contract"));
+}
+
+#[test]
+fn asyncapi_init_and_validate_workstream_contract() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "event contracts"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["asyncapi", "init", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains(
+            "workflow/workstreams/001-event-contracts/contracts/asyncapi.yaml",
+        ));
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["asyncapi", "validate", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Validated AsyncAPI contract"));
+}
+
+#[test]
+fn schema_new_and_validate_workstream_contracts() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "schema contracts"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["schema", "new", "001", "repository event"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains(
+            "workflow/workstreams/001-schema-contracts/contracts/schemas/repository-event.schema.json",
+        ));
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["schema", "validate", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Validated 1 JSON Schema file(s)."))
+        .stdout(contains("repository-event.schema.json"));
 }
 
 #[test]
