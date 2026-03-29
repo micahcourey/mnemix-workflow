@@ -2,6 +2,9 @@
 status: completed
 summary: Added scaffold-and-validate support for OpenAPI, AsyncAPI, and JSON Schema contracts.
 updated: 2026-03-29
+prs:
+- 8
+
 ---
 
 # Status
