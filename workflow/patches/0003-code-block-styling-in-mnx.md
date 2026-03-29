@@ -1,7 +1,10 @@
 ---
-status: open
-summary: Code Block Styling In Mnx is active and ready for implementation.
+status: completed
+summary: Styled fenced Markdown code blocks as distinct terminal blocks in mnx.
 updated: 2026-03-29
+prs:
+- 11
+
 ---
 
 # Patch: Code Block Styling In Mnx
