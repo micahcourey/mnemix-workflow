@@ -38,7 +38,7 @@ struct MarkdownRenderer {
 }
 
 impl MarkdownRenderer {
-    fn render<'a>(&mut self, parser: Parser<'a>) {
+    fn render(&mut self, parser: Parser<'_>) {
         for event in parser {
             match event {
                 Event::Start(tag) => self.start_tag(tag),

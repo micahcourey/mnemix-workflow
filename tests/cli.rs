@@ -1007,8 +1007,8 @@ fn hooks_install_writes_bundled_git_hooks() {
     assert!(pre_push.is_file());
 
     let installed_pre_commit = fs::read_to_string(&pre_commit).expect("read pre-commit");
-    let bundled_pre_commit =
-        fs::read_to_string(hook_path("pre-commit-status-updated")).expect("read bundled pre-commit");
+    let bundled_pre_commit = fs::read_to_string(hook_path("pre-commit-status-updated"))
+        .expect("read bundled pre-commit");
     assert_eq!(installed_pre_commit, bundled_pre_commit);
 
     let installed_pre_push = fs::read_to_string(&pre_push).expect("read pre-push");
