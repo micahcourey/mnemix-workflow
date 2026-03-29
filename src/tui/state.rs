@@ -171,9 +171,7 @@ impl AppState {
         }
 
         let artifact_len = self.current_artifacts().len();
-        if artifact_len == 0 {
-            self.selected_artifact = 0;
-        } else if self.selected_artifact >= artifact_len {
+        if artifact_len == 0 || self.selected_artifact >= artifact_len {
             self.selected_artifact = 0;
         }
         self.scroll = 0;
