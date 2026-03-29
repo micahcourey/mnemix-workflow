@@ -10,8 +10,9 @@ Examples:
   ./scripts/release.sh 0.1.0 --dry-run
 
 This script prepares a release branch and pull request for versions that only
-require updating Cargo.toml and python/mnemix_workflow/_version.py before the
-release. Run it from a clean checkout of the main branch.
+require updating Cargo.toml, Cargo.lock, and
+python/mnemix_workflow/_version.py before the release. Run it from a clean
+checkout of the main branch.
 EOF
   exit 1
 }
@@ -161,7 +162,7 @@ run git checkout -b "$release_branch"
 
 if [[ "$dry_run" == "true" ]]; then
   cat <<EOF
-[dry-run] would update Cargo.toml and python/mnemix_workflow/_version.py to $version
+[dry-run] would update Cargo.toml, Cargo.lock, and python/mnemix_workflow/_version.py to $version
 [dry-run] would run ./scripts/check-python-package.sh
 [dry-run] would commit release prep on $release_branch
 [dry-run] would push $release_branch and open a PR against main
@@ -180,7 +181,7 @@ else
 
   ./scripts/check-python-package.sh
 
-  git add Cargo.toml python/mnemix_workflow/_version.py
+  git add Cargo.toml Cargo.lock python/mnemix_workflow/_version.py
   git commit -m "chore(release): prepare v$version"
   git push -u origin "$release_branch"
   gh pr create \
