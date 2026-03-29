@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mnemix-workflow"
+dynamic = ["version"]
+description = "Python distribution for the Mnemix Workflow bundled CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Micah Courey" }]
+keywords = ["workflow", "planning", "cli", "agents", "specs"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Homepage = "https://github.com/micahcourey/mnemix-workflow"
+Repository = "https://github.com/micahcourey/mnemix-workflow"
+Issues = "https://github.com/micahcourey/mnemix-workflow/issues"
+
+[project.scripts]
+mnemix-workflow = "mnemix_workflow._runner:main"
+mxw = "mnemix_workflow._runner:main_alias"
+mnx = "mnemix_workflow._runner:main_tui"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+release = [
+    "build>=1.2",
+    "twine>=5.1",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "mnemix_workflow._version.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mnemix_workflow*"]
+
+[tool.setuptools.package-data]
+mnemix_workflow = ["_bin/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

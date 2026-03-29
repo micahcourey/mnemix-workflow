@@ -78,6 +78,13 @@ Use a patch when:
 
 Patch files use the same frontmatter fields directly in the patch file itself.
 
+Helpful commands:
+
+- `mxw status list --status open`
+- `mxw patch status list --status completed`
+- `mxw validate`
+- `mxw hooks install`
+
 ## Optional Contract Standards
 
 When a workstream needs machine-readable contracts, keep them inside the

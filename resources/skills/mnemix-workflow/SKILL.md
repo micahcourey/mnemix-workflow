@@ -26,8 +26,10 @@ same conventions.
 6. Fill in the artifact(s) for the actual work without leaving placeholder "open questions" behind by default.
 7. If the human explicitly does not want to decide something yet, add a focused `Open Questions` section or a decision-oriented plan slice for that unresolved item.
 8. Keep metadata current with `mxw status`, `mxw patch status`, or the in-TUI status action.
-9. Record workstream-local decisions in `decisions/`.
-10. Promote durable framework decisions to `workflow/decisions/` when needed.
+9. Run `mxw validate` before wrapping up meaningful work so tracked artifacts and optional contracts stay healthy.
+10. Offer `mxw hooks install` when the repository would benefit from automatic `updated` refreshes and push-time reminders.
+11. Record workstream-local decisions in `decisions/`.
+12. Promote durable framework decisions to `workflow/decisions/` when needed.
 
 ## Bundled Resources
 
@@ -57,4 +59,6 @@ Read `references/workstream-conventions.md` when you need:
 - Patches are single files under `workflow/patches/` and carry the same frontmatter metadata directly in the patch file.
 - Every PR should map to either a workstream or a patch.
 - Use `mxw status list` and `mxw patch status list` when you need a non-TUI view of open or completed tracked work.
+- Use `mxw validate` to run an umbrella check across tracked metadata and any present contract artifacts.
+- Use `mxw hooks install` to install the bundled `pre-commit` and `pre-push` hook helpers when the repo wants the status nudges.
 - When work touches HTTP APIs, async interfaces, or reusable data shapes, use `mxw openapi`, `mxw asyncapi`, or `mxw schema` to scaffold and validate contract artifacts under the workstream's `contracts/` folder.

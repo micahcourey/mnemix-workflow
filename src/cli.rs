@@ -1,10 +1,25 @@
 use clap::{Args, Parser, Subcommand};
 
+const AFTER_HELP: &str = "\
+Install:
+  pipx install mnemix-workflow
+  pip install mnemix-workflow
+
+Common commands:
+  mxw init
+  mxw new \"feature name\"
+  mxw patch new \"small fix\"
+  mxw validate
+  mxw hooks install
+  mnx
+";
+
 #[derive(Parser, Debug)]
 #[command(
     author,
     version,
-    about = "Lightweight workflow CLI for planning with AI assistance"
+    about = "Lightweight workflow CLI for planning with AI assistance",
+    after_help = AFTER_HELP
 )]
 pub(crate) struct Cli {
     #[command(subcommand)]
@@ -29,6 +44,10 @@ pub(crate) enum Command {
     Patch(PatchArgs),
     /// Read or update workstream status metadata
     Status(StatusArgs),
+    /// Install bundled git hooks for status reminders and metadata refreshes
+    Hooks(HooksArgs),
+    /// Run umbrella validation across tracked workflow artifacts
+    Validate(ValidateArgs),
 }
 
 #[derive(Args, Debug)]
@@ -159,4 +178,29 @@ pub(crate) struct StatusListArgs {
     /// Optional status value to filter by
     #[arg(long)]
     pub(crate) status: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct HooksArgs {
+    #[command(subcommand)]
+    pub(crate) action: HooksAction,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum HooksAction {
+    /// Install the bundled git hooks into the current repository
+    Install(HooksInstallArgs),
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct HooksInstallArgs {
+    /// Overwrite existing hook files when they differ
+    #[arg(long)]
+    pub(crate) force: bool,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct ValidateArgs {
+    /// Optional workstream or patch reference to validate instead of the whole repository
+    pub(crate) target: Option<String>,
 }
