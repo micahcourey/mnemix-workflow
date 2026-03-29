@@ -2,6 +2,9 @@
 status: completed
 summary: Reworked the README into a more product-focused entrypoint with clearer mnx and quickstart guidance.
 updated: 2026-03-29
+prs:
+- 10
+
 ---
 
 # Patch: Product Focused Readme And Mnx Ui Quickstart
