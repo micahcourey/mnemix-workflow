@@ -2,6 +2,9 @@
 status: completed
 summary: Added basic Markdown-aware formatting to the mnx preview pane.
 updated: 2026-03-29
+prs:
+- 9
+
 ---
 
 # Patch: Formatted Markdown Preview In Mnx
