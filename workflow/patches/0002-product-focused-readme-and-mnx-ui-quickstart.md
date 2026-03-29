@@ -1,6 +1,6 @@
 ---
-status: open
-summary: Refocus the README on the product story and make mnx UI install and usage guidance easier to find.
+status: completed
+summary: Reworked the README into a more product-focused entrypoint with clearer mnx and quickstart guidance.
 updated: 2026-03-29
 ---
 
