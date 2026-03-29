@@ -266,6 +266,12 @@ mxw patch status list --status open
 Launch the browse-first terminal UI:
 
 ```bash
+mnx
+```
+
+or explicitly through the main workflow CLI:
+
+```bash
 mxw ui
 ```
 
@@ -276,6 +282,9 @@ V1 of the TUI gives you:
 - artifact preview for `STATUS.md`, `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
 - direct patch-file preview for patches
 - one lightweight operational action: press `s` to cycle the selected item's status
+
+`mnx` is the shortcut binary for jumping straight into the TUI, while `mxw`
+remains the explicit command-oriented CLI surface.
 
 Key controls:
 

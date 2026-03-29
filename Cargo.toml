@@ -28,6 +28,10 @@ path = "src/bin/mnemix-workflow.rs"
 name = "mxw"
 path = "src/bin/mxw.rs"
 
+[[bin]]
+name = "mnx"
+path = "src/bin/mnx.rs"
+
 [dev-dependencies]
 assert_cmd = "2.1.1"
 predicates = "3.1.3"

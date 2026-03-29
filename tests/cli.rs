@@ -48,6 +48,17 @@ fn help_lists_ui_command() {
 }
 
 #[test]
+fn mnx_help_describes_the_tui_shortcut() {
+    Command::cargo_bin("mnx")
+        .expect("binary")
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(contains("interactive Mnemix Workflow TUI"))
+        .stdout(contains("Usage:\n  mnx"));
+}
+
+#[test]
 fn init_creates_workflow_structure() {
     let temp_dir = init_git_repo();
 

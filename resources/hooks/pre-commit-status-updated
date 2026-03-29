@@ -51,7 +51,7 @@ def staged_patches(root: pathlib.Path) -> set[str]:
 
 def touch_status_file(status_path: pathlib.Path, root: pathlib.Path) -> bool:
     original = status_path.read_text()
-    today = dt.date.today().isoformat()
+    today = dt.datetime.now(dt.UTC).date().isoformat()
     updated = UPDATED_RE.sub(rf"\g<1>{today}", original, count=1)
     if updated == original:
         return False
