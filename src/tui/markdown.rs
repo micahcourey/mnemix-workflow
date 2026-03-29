@@ -26,6 +26,7 @@ struct MarkdownRenderer {
     item_prefix: Option<String>,
     heading_level: Option<HeadingLevel>,
     code_block: bool,
+    code_block_language: Option<String>,
     strong_depth: usize,
     emphasis_depth: usize,
     strike_depth: usize,
@@ -80,16 +81,13 @@ impl MarkdownRenderer {
             Tag::CodeBlock(kind) => {
                 self.push_current_line();
                 self.code_block = true;
-                let label = match kind {
-                    CodeBlockKind::Fenced(lang) if !lang.is_empty() => format!("```{lang}"),
-                    _ => "```".to_owned(),
+                self.code_block_language = match kind {
+                    CodeBlockKind::Fenced(lang) if !lang.is_empty() => Some(lang.to_string()),
+                    _ => None,
                 };
-                self.lines.push(Line::from(vec![Span::styled(
-                    label,
-                    Style::default()
-                        .fg(Color::DarkGray)
-                        .add_modifier(Modifier::ITALIC),
-                )]));
+                self.lines.push(code_block_header(
+                    self.code_block_language.as_deref(),
+                ));
             }
             Tag::Strong => self.strong_depth += 1,
             Tag::Emphasis => self.emphasis_depth += 1,
@@ -124,14 +122,10 @@ impl MarkdownRenderer {
             TagEnd::Item => self.push_current_line(),
             TagEnd::CodeBlock => {
                 self.push_current_line();
-                self.lines.push(Line::from(vec![Span::styled(
-                    "```",
-                    Style::default()
-                        .fg(Color::DarkGray)
-                        .add_modifier(Modifier::ITALIC),
-                )]));
+                self.lines.push(code_block_footer());
                 self.push_blank_line();
                 self.code_block = false;
+                self.code_block_language = None;
             }
             TagEnd::Strong => self.strong_depth = self.strong_depth.saturating_sub(1),
             TagEnd::Emphasis => self.emphasis_depth = self.emphasis_depth.saturating_sub(1),
@@ -142,12 +136,8 @@ impl MarkdownRenderer {
 
     fn push_text(&mut self, text: &str) {
         if self.code_block {
-            for line in text.split('\n') {
-                self.push_spans(vec![Span::styled(
-                    line.to_owned(),
-                    Style::default().fg(Color::Green),
-                )]);
-                self.push_current_line();
+            for line in text.split_terminator('\n') {
+                self.lines.push(code_block_line(line));
             }
             return;
         }
@@ -268,6 +258,39 @@ fn heading_style(level: HeadingLevel) -> Style {
     }
 }
 
+fn code_block_header(language: Option<&str>) -> Line<'static> {
+    let label = match language {
+        Some(language) => format!("┌ code: {language}"),
+        None => "┌ code".to_owned(),
+    };
+
+    Line::from(vec![Span::styled(
+        label,
+        Style::default()
+            .fg(Color::Yellow)
+            .bg(Color::DarkGray)
+            .add_modifier(Modifier::BOLD),
+    )])
+}
+
+fn code_block_line(line: &str) -> Line<'static> {
+    let style = Style::default().fg(Color::Green).bg(Color::DarkGray);
+    Line::from(vec![
+        Span::styled("│ ", style),
+        Span::styled(line.to_owned(), style),
+    ])
+}
+
+fn code_block_footer() -> Line<'static> {
+    Line::from(vec![Span::styled(
+        "└",
+        Style::default()
+            .fg(Color::Yellow)
+            .bg(Color::DarkGray)
+            .add_modifier(Modifier::BOLD),
+    )])
+}
+
 #[cfg(test)]
 mod tests {
     use ratatui::style::{Color, Modifier};
@@ -287,9 +310,11 @@ mod tests {
     fn renders_blockquotes_and_code_fences() {
         let text = render_markdown("> quoted\n\n```rs\nlet x = 1;\n```");
         assert!(text.lines[0].to_string().contains("> quoted"));
-        assert_eq!(text.lines[2].to_string(), "```rs");
-        assert_eq!(text.lines[3].to_string(), "let x = 1;");
-        assert_eq!(text.lines[3].spans[0].style.fg, Some(Color::Green));
+        assert_eq!(text.lines[2].to_string(), "┌ code: rs");
+        assert_eq!(text.lines[3].to_string(), "│ let x = 1;");
+        assert_eq!(text.lines[3].spans[0].style.bg, Some(Color::DarkGray));
+        assert_eq!(text.lines[3].spans[1].style.fg, Some(Color::Green));
+        assert_eq!(text.lines[4].to_string(), "└");
     }
 
     #[test]
