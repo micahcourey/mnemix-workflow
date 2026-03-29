@@ -1,7 +1,9 @@
 ---
-status: open
+status: completed
 summary: Added a dedicated PR CI workflow for Rust, shell, and Python package checks.
 updated: 2026-03-29
+prs:
+  - 17
 ---
 
 # Patch: Add Pull Request Ci Checks
