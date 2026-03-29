@@ -1,162 +1,91 @@
 # Mnemix Workflow
 
-`mnemix-workflow` is a lightweight, repo-native feature planning framework for human planning with AI-assisted implementation.
+`mnemix-workflow` is a repo-native spec-driven development methodology and CLI
+for teams that want a clear path from intent to implementation, with AI as the
+primary implementation engine and humans staying in control of the plan.
 
-It gives teams a clear, versioned path from intent to execution using:
+It combines:
 
-- `spec.md` for product intent
-- `ux.md` for user or developer experience intent
-- `plan.md` for technical strategy
+- a lightweight spec-driven planning method built around versioned Markdown artifacts
+- a command-oriented CLI for scaffolding and status management
+- an interactive terminal UI for browsing workstreams and patches quickly
+- selective support for machine-readable contract standards where they add real value
+
+The result is a spec-driven workflow that stays readable to humans, operable by
+agents, and grounded in normal repository files instead of hidden metadata.
+
+At the methodology level, it gives teams a lightweight path from:
+
+- `spec.md` for problem and intent
+- `ux.md` for experience and behavior
+- `plan.md` for implementation approach
 - `tasks.md` for execution slices
-- `STATUS.md` for lightweight machine-readable workstream state
-- `patches/` for lightweight tracked fixes and minor enhancements
+- `STATUS.md` for current state and PR linkage
 
-The framework is designed to stay small in the common case, make UX first-class, and use open standards only where they add real value.
+It also gives teams a simple planning rule:
 
-## Project Goals
+- use a `workstream` for larger, multi-artifact work
+- use a `patch` for smaller tracked changes that still need repo-visible planning
+- record durable repo-shaping choices in `workflow/decisions/`
 
-- Keep the default workflow lightweight and teachable
-- Make planning artifacts readable to humans and operable by AI agents
-- Preserve a clear narrative from problem to implementation
-- Make UX a first-class planning artifact instead of burying it inside generic specs
-- Use open standards selectively for API and data contracts
-- Stay repo-native and tool-neutral
-- Provide a smooth path from bootstrap tooling to a future dedicated CLI
+For the full method, terminology, and repository shape, see the
+[Methodology Naming System](docs/methodology/naming-system.md).
 
-## Methodology
+## Why It Exists
 
-The core idea is simple:
+AI coding gets much more reliable when requirements, UX intent, execution
+slices, and status are stored in the repo instead of living only in chat
+history.
 
-> A workflow is made of workstreams. Each workstream moves from spec to UX to plan to tasks, with decisions recorded when they become durable.
+`mnemix-workflow` gives you a lightweight structure for that:
 
-Every pull request should map to either:
+- `workstreams` for larger planned work
+- `patches` for smaller tracked fixes and enhancements
+- `STATUS.md` and frontmatter metadata for lightweight machine-readable state
+- `mnx` for fast interactive browsing
+- `mxw` for explicit scaffolding, status, and contract commands
 
-- a full `workstream`
-- a lightweight `patch`
+## Install
 
-### Core Concepts
+Today the most reliable local-development path is:
 
-- `workflow`
-  - the overall methodology and the artifact root in the repository
-- `workstream`
-  - one unit of planned work
-- `spec.md`
-  - the problem, users, goals, scope, and success criteria
-- `ux.md`
-  - journeys, states, interaction expectations, and Gherkin acceptance scenarios
-- `plan.md`
-  - technical approach and design strategy
-- `tasks.md`
-  - execution slices and validation checkpoints
-- `STATUS.md`
-  - lightweight machine-readable state and PR linkage for a workstream
-- `workflow/decisions/`
-  - durable repo-level decisions
-- `workflow/workstreams/<id>/decisions/`
-  - decisions local to one workstream
-- `workflow/patches/`
-  - single-file tracked fixes, chores, and narrow enhancements
-
-### Lightweight By Default
-
-The common case is intentionally small:
-
-```text
-workflow/workstreams/001-some-workstream/
-  STATUS.md
-  spec.md
-  ux.md
-  plan.md
-  tasks.md
-  decisions/
-
-workflow/patches/0001-fix-status-copy.md
+```bash
+cargo run --bin mxw -- --help
 ```
 
-You do not need every possible layer for every feature. The four core files are the center of gravity. Everything else is additive.
+Shortcut into the interactive UI during local development:
 
-## Open Standards
-
-`mnemix-workflow` does not try to replace standards that already work well. Its
-first-class standards support is intentionally focused on three contract
-standards where machine-readable artifacts add clear value:
-
-- `OpenAPI` for HTTP interfaces
-- `AsyncAPI` for event-driven interfaces
-- `JSON Schema` for shared data shapes
-
-Decisions and architecture remain repo-native by default. There is no strong
-repo-native open standard for feature-level UX specifications, which is why
-`ux.md` is a first-party Mnemix artifact.
-
-## Repository Layout
-
-```text
-README.md
-Cargo.toml
-docs/
-  methodology/
-src/
-tests/
-resources/
-  hooks/
-  skills/
-    mnemix-workflow/
-workflow/
-  decisions/
-  patches/
-  workstreams/
-    001-bootstrap-mnemix-workflow/
-    002-workflow-skill-bootstrap/
+```bash
+cargo run --bin mnx --
 ```
 
-### Folder Roles
+The intended packaged install experience is:
 
-- `docs/`
-  - explanatory documents about the methodology and project direction
-- `resources/skills/`
-  - reusable operational assets such as skills
-- `resources/hooks/`
-  - optional local git hook scripts for status nudges
-- `workflow/`
-  - active workflow artifacts
-- `workflow/workstreams/`
-  - individual units of planned work
-- `workflow/patches/`
-  - lightweight tracked changes represented by a single file
-- `workflow/decisions/`
-  - durable framework decisions
+```bash
+pipx install mnemix-workflow
+```
+
+That packaged distribution is not the default local-dev path yet, so the README
+below uses `cargo run` for development examples and `mxw` / `mnx` for the
+installed mental model.
 
 ## Quickstart
 
-### 1. Read The Method
+### 1. Initialize A Repository
 
-Start with:
-
-- [Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md)
-- [Product Requirements Document](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/prd.md)
-
-Then look at the existing workstreams:
-
-- [001 Bootstrap](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/001-bootstrap-mnemix-workflow/spec.md)
-- [002 Workflow Skill Bootstrap](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/002-workflow-skill-bootstrap/spec.md)
-- [003 CLI Bootstrap](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/003-cli-bootstrap/spec.md)
-
-### 2. Initialize A Repository
-
-During local development, run the CLI directly:
+Local development:
 
 ```bash
 cargo run --bin mxw -- init
 ```
 
-After packaging lands, the intended installed flow is:
+Installed usage:
 
 ```bash
 mxw init
 ```
 
-This creates the minimum workflow domain:
+This creates:
 
 ```text
 workflow/
@@ -166,15 +95,9 @@ workflow/
   workstreams/
 ```
 
-### 3. Create A New Workstream
+### 2. Create Planned Work
 
-During local development:
-
-```bash
-cargo run --bin mxw -- new "user profile redesign"
-```
-
-Once installed:
+For a full workstream:
 
 ```bash
 mxw new "user profile redesign"
@@ -193,25 +116,7 @@ workflow/workstreams/<id>-user-profile-redesign/
     README.md
 ```
 
-`STATUS.md` is created by default for each new workstream. Its frontmatter uses:
-
-- required fields: `status`, `summary`, `updated`
-- optional fields: `prs`
-
-### 4. Fill In The Core Artifacts
-
-After scaffolding a workstream:
-
-1. Write `spec.md` to define the problem and goals.
-2. Write `ux.md` to define the experience and acceptance scenarios.
-3. Write `plan.md` to define the implementation approach.
-4. Write `tasks.md` to break the work into execution slices.
-5. Keep `STATUS.md` current so CLI and future Studio views can track state and linked PRs.
-
-### 5. Use A Patch For Smaller Tracked Work
-
-For a narrow fix, chore, or minor enhancement, use a patch instead of a full
-workstream:
+For a smaller tracked change:
 
 ```bash
 mxw patch new "fix status copy"
@@ -223,103 +128,59 @@ This creates:
 workflow/patches/0001-fix-status-copy.md
 ```
 
-Patch files are single-file mini-specs. They carry frontmatter status metadata
-directly in the file using:
-
-- required fields: `status`, `summary`, `updated`
-- optional fields: `prs`
-
-Use a patch when one file can clearly capture the intent, scope, implementation
-notes, and validation. Use a full workstream when the work needs first-class
-spec, UX, plan, and task separation.
-
-### 6. Read Or Update Status
+### 3. Track Status
 
 Show status:
 
 ```bash
 mxw status 004
+mxw patch status 0001
 ```
 
-List only completed workstreams:
-
-```bash
-mxw status list --status completed
-```
-
-Set status and link a PR:
+Update status and link a PR:
 
 ```bash
 mxw status set 004 completed --pr 12
+mxw patch status set 0001 completed --pr 12
 ```
 
-This keeps the workstream path stable while updating frontmatter in `STATUS.md`.
-
-Patches use the same lifecycle metadata:
+List tracked items by state:
 
 ```bash
-mxw patch status 0001
-mxw patch status set 0001 completed --pr 12
+mxw status list --status completed
 mxw patch status list --status open
 ```
 
-### 7. Use Contract Standards When Needed
+### 4. Launch The Interactive UI
 
-When a workstream needs machine-readable contracts, add them under that
-workstream's `contracts/` folder.
-
-For REST or HTTP APIs:
-
-```bash
-mxw openapi init 007
-mxw openapi validate 007
-```
-
-For event-driven or message-based interfaces:
-
-```bash
-mxw asyncapi init 007
-mxw asyncapi validate 007
-```
-
-For shared data shapes:
-
-```bash
-mxw schema new 007 "repository event"
-mxw schema validate 007
-```
-
-Use:
-
-- `OpenAPI` for synchronous HTTP interfaces
-- `AsyncAPI` for async channels or operations
-- `JSON Schema` for reusable payload and document shapes
-
-### 8. Browse Interactively
-
-Launch the browse-first terminal UI:
+The fastest way into the product experience is:
 
 ```bash
 mnx
 ```
 
-or explicitly through the main workflow CLI:
+You can also launch it explicitly through the main CLI:
 
 ```bash
 mxw ui
 ```
 
-V1 of the TUI gives you:
+`mnx` is the shortcut app-like entrypoint. `mxw` is the explicit command
+surface for scripting, scaffolding, and operational actions.
+
+## The `mnx` UI
+
+`mnx` is the browse-first terminal experience for Mnemix Workflow.
+
+Today it gives you:
 
 - status buckets for `proposed`, `open`, and `completed`
 - a unified tracked-item list for workstreams and patches
 - artifact preview for `STATUS.md`, `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
-- basic Markdown formatting in the preview pane for headings, lists, blockquotes, code fences, and simple emphasis
+- basic Markdown formatting in the preview pane for headings, lists,
+  blockquotes, code fences, and simple emphasis
 - direct patch-file preview for patches
 - one lightweight operational action: press `s` to cycle the selected item's status
-
-`mnx` is the shortcut binary for jumping straight into the TUI, while `mxw`
-remains the explicit command-oriented CLI surface.
 
 Key controls:
 
@@ -329,31 +190,158 @@ Key controls:
 - `s` to cycle the selected item's status
 - `q` or `Esc` to quit
 
-### 9. Optional Local Hooks
+## Method Overview
 
-The repository includes optional local hook scripts under `resources/hooks/`:
+The core idea is simple:
 
-- `pre-commit-status-updated`
-  - refreshes `updated` when workstream files change
-- `pre-push-status-reminder`
-  - warns that `STATUS.md` may need review before push
-  - reminds you that if the resulting PR completes the workstream, `STATUS.md` should be set to `completed`
+> A workflow is made of workstreams. Each workstream moves from spec to UX to
+> plan to tasks, with decisions recorded when they become durable.
 
-These hooks are local nudges, not the source of truth. Final semantic status should still land through the normal PR flow.
+That methodology is intentionally trying to solve a specific problem:
 
-### 10. Use The Skill Directly
+- humans need a clear narrative of intent, scope, and tradeoffs
+- AI agents need explicit artifacts they can read, update, and validate
+- teams need progress and status to live in the repo instead of only in chat or PR threads
 
-The repository includes a real Agent Skills Open Standard skill at:
+Every pull request should map to either:
+
+- a full `workstream`
+- a lightweight `patch`
+
+In practice, the methodology is meant to help humans and agents align before
+implementation starts:
+
+- `spec.md` captures what should be built and why
+- `ux.md` captures how it should feel and behave
+- `plan.md` captures how the implementation will be approached
+- `tasks.md` captures the execution slices and verification steps
+- `STATUS.md` captures whether the work is proposed, open, or completed
+
+### Planning Lanes
+
+- `workflow/workstreams/` holds larger planned initiatives with the full artifact set
+- `workflow/patches/` holds lightweight tracked changes in a single file
+- `workflow/decisions/` holds durable decisions that outlive any one workstream or patch
+
+This keeps the framework lightweight by default without allowing untracked PRs.
+
+For a fuller explanation of the method, terminology, repository shape, and
+teaching vocabulary, see the
+[Methodology Naming System](docs/methodology/naming-system.md).
+
+### Core Artifacts
+
+- `spec.md`
+  - problem, users, goals, scope, and success criteria
+- `ux.md`
+  - journeys, states, interaction expectations, and Gherkin acceptance scenarios
+- `plan.md`
+  - technical approach and implementation strategy
+- `tasks.md`
+  - execution slices and validation checkpoints
+- `STATUS.md`
+  - machine-readable workstream state and linked PR metadata
+
+### Lightweight By Default
+
+The common case stays intentionally small:
+
+```text
+workflow/workstreams/001-some-workstream/
+  STATUS.md
+  spec.md
+  ux.md
+  plan.md
+  tasks.md
+  decisions/
+
+workflow/patches/0001-fix-status-copy.md
+```
+
+## Contract Standards
+
+`mnemix-workflow` uses open standards selectively where machine-readable
+contracts are especially useful:
+
+- `OpenAPI` for synchronous HTTP interfaces
+- `AsyncAPI` for event-driven interfaces
+- `JSON Schema` for reusable data shapes
+
+Examples:
+
+```bash
+mxw openapi init 007
+mxw openapi validate 007
+
+mxw asyncapi init 007
+mxw asyncapi validate 007
+
+mxw schema new 007 "repository event"
+mxw schema validate 007
+```
+
+These artifacts live under a workstream's `contracts/` folder when needed.
+
+## Repository Layout
+
+```text
+README.md
+Cargo.toml
+docs/
+  methodology/
+src/
+tests/
+resources/
+  hooks/
+  skills/
+    mnemix-workflow/
+workflow/
+  decisions/
+  patches/
+  workstreams/
+```
+
+### Folder Roles
+
+- `docs/`
+  - explanatory docs about the method and product direction
+- `resources/skills/`
+  - reusable agent-facing assets and templates
+- `resources/hooks/`
+  - optional local git hook scripts for status nudges
+- `workflow/`
+  - active workflow artifacts
+- `workflow/workstreams/`
+  - larger planned work
+- `workflow/patches/`
+  - lightweight tracked fixes and enhancements
+- `workflow/decisions/`
+  - durable framework decisions
+
+## Learn More
+
+Start with:
+
+- [Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md)
+- [Product Requirements Document](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/prd.md)
+- [Bootstrap Workstream 001](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/001-bootstrap-mnemix-workflow/spec.md)
+- [CLI Bootstrap Workstream 003](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/003-cli-bootstrap/spec.md)
+
+The repo also includes a real Agent Skills Open Standard skill at:
 
 - [resources/skills/mnemix-workflow/SKILL.md](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/resources/skills/mnemix-workflow/SKILL.md)
 
-It bundles:
+## Current Status
 
-- workstream templates in `assets/`
-- a scaffold script in `scripts/`
-- focused conventions in `references/`
+The repository is dogfooding the framework on itself.
 
-The skill remains a useful fallback while the Rust CLI is being packaged for release.
+The current implementation includes:
+
+- repo initialization and scaffolding via `mxw`
+- workstream and patch tracking
+- status metadata and PR linkage
+- browse-first TUI access via `mnx`
+- contract scaffolding and validation for `OpenAPI`, `AsyncAPI`, and `JSON Schema`
 
 ## Numbering Convention
 
@@ -362,20 +350,6 @@ Workstreams use numeric prefixes:
 - `001` through `999` use zero-padded 3-digit ids
 - after `999`, ids continue as `1000`, `1001`, and so on
 
-Tooling should always sort by the numeric prefix, not plain string order.
+Patches use zero-padded 4-digit prefixes:
 
-## Current Status
-
-The repository is being bootstrapped by dogfooding the framework on itself.
-
-The current implementation includes:
-
-- a methodology and naming system
-- an initial framework plan
-- the first bootstrap workstream
-- a real bootstrap skill for creating new workstreams before the dedicated CLI exists
-- an implementation-focused workstream for the first Rust CLI slice
-- a working Rust CLI with `init`, `new`, and `status` commands plus the `mxw` shorthand alias
-- optional local hook scripts for `updated` refreshes and push-time reminders
-
-The next major step is packaging and releasing the CLI cleanly so the intended install flow, `pipx install mnemix-workflow`, becomes real for consuming projects.
+- `0001`, `0002`, `0003`, and so on
