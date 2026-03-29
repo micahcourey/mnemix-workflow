@@ -55,11 +55,11 @@ readiness rather than a new user-facing feature slice.
 - [x] Package metadata aligned for `Cargo.toml` and `python/mnemix_workflow/_version.py`
 - [x] Publish workflow configured for the `pypi` environment
 - [x] Local package preflight passes
-- [ ] Release tag created
-- [ ] GitHub Release published
-- [ ] PyPI publish workflow completed successfully
-- [ ] Clean `pip install mnemix-workflow` verification completed against the live package
-- [ ] Clean `pipx install mnemix-workflow` verification completed against the live package
+- [x] Release tag created
+- [x] GitHub Release published
+- [x] PyPI publish workflow completed successfully
+- [x] Clean `pip install mnemix-workflow` verification completed against the live package
+- [x] Clean `pipx install mnemix-workflow` verification completed against the live package
 
 ## Notes
 
