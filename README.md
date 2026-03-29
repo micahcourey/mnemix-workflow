@@ -1,18 +1,18 @@
 # Mnemix Workflow
 
-`mnemix-workflow` is a repo-native planning framework and CLI for teams that
-want a clear path from intent to implementation, with AI as the primary
-implementation engine and humans staying in control of the plan.
+`mnemix-workflow` is a repo-native spec-driven development methodology and CLI
+for teams that want a clear path from intent to implementation, with AI as the
+primary implementation engine and humans staying in control of the plan.
 
 It combines:
 
-- a lightweight planning method built around versioned Markdown artifacts
+- a lightweight spec-driven planning method built around versioned Markdown artifacts
 - a command-oriented CLI for scaffolding and status management
 - an interactive terminal UI for browsing workstreams and patches quickly
 - selective support for machine-readable contract standards where they add real value
 
-The result is a workflow that stays readable to humans, operable by agents, and
-grounded in normal repository files instead of hidden metadata.
+The result is a spec-driven workflow that stays readable to humans, operable by
+agents, and grounded in normal repository files instead of hidden metadata.
 
 ## Why It Exists
 
