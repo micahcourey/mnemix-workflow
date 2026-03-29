@@ -2,6 +2,8 @@
 status: completed
 summary: Updated the release-prep script so release version bumps include Cargo.lock.
 updated: 2026-03-29
+prs:
+  - 16
 ---
 
 # Patch: Include Cargo Lock In Release Prep
