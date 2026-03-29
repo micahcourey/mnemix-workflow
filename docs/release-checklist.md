@@ -155,6 +155,8 @@ main branch
 8. Verify the new version on PyPI and in clean installs:
   - `python3 -m pip install mnemix-workflow`
   - `pipx install mnemix-workflow`
+9. Update the GitHub Release notes from the repo copy when needed:
+  - `gh release edit vX.Y.Z --notes-file RELEASE_NOTES.md`
 
 ### Rollback
 
