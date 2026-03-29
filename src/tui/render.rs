@@ -8,6 +8,7 @@ use ratatui::{
 
 use super::{
     data::{preview_title, read_artifact},
+    markdown::render_markdown,
     state::{AppState, FocusPane, STATUSES},
 };
 
@@ -134,7 +135,7 @@ fn render_preview(frame: &mut Frame, state: &AppState, area: ratatui::layout::Re
     let content = read_artifact(item, artifact);
 
     frame.render_widget(
-        Paragraph::new(content)
+        Paragraph::new(render_markdown(&content))
             .block(preview_block)
             .wrap(Wrap { trim: false })
             .scroll((state.scroll, 0)),
