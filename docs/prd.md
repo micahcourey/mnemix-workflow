@@ -48,7 +48,7 @@ Without a lightweight, teachable workflow layer:
 | Keep every PR tracked without overloading tiny fixes | Small work has a lighter tracked lane | Every PR maps to either a workstream or a patch |
 | Make UX first-class | UX artifact exists and is used in active workstreams | Every user-facing workstream can define `ux.md` with narrative plus Gherkin scenarios |
 | Keep the system repo-native and AI-operable | Workstreams and decisions live in normal versioned files | No required hidden metadata system for the core workflow |
-| Provide a bootstrap path before the CLI exists | Reusable bootstrap tool exists in the repo | A standards-compliant skill can scaffold new workstreams |
+| Keep the workflow skill aligned with the shipped CLI | Agents have a concise, standards-compliant guide to the current workflow | The skill reinforces `mxw`, `mnx`, and repo conventions without stale alternate paths |
 | Preserve ecosystem fit | Integration boundaries stay clear | `mnemix-context` remains canonical for repo rules and `mnemix` memory remains optional |
 
 ### Non-Goals
@@ -102,12 +102,12 @@ Without a lightweight, teachable workflow layer:
   - Given the framework rule, When a PR is opened, Then it maps to either a workstream or a patch
 - **Priority**: Must Have
 
-### FR4: Standards-Compliant Bootstrap Skill
-- **Description**: The repo must include a real Agent Skills Open Standard skill for workstream bootstrapping before the dedicated CLI exists.
-- **User Story**: As an AI agent, I want a standards-compliant bootstrap skill, so that I can create new workstreams consistently using the same conventions the framework teaches.
+### FR4: Standards-Compliant Workflow Skill
+- **Description**: The repo must include a real Agent Skills Open Standard skill that teaches the current CLI-first workflow.
+- **User Story**: As an AI agent, I want a standards-compliant workflow skill, so that I can create and maintain tracked work consistently using the same conventions the framework teaches.
 - **Acceptance Criteria**:
-  - Given the repository, When an agent inspects `resources/skills/mnemix-workflow/`, Then it finds `SKILL.md`, `assets/`, `scripts/`, and `references/`
-  - Given the bootstrap script, When it runs successfully, Then it creates a new numbered workstream folder with the standard artifact set
+  - Given the repository, When an agent inspects `resources/skills/mnemix-workflow/`, Then it finds `SKILL.md`, `assets/`, and `references/`
+  - Given the current workflow, When an agent reads the skill, Then it can follow `mxw`, `mnx`, status, and contract commands without stale fallback instructions
 - **Priority**: Must Have
 
 ### FR5: Numbering And Naming Conventions
@@ -143,20 +143,19 @@ Without a lightweight, teachable workflow layer:
 ### User Flow
 1. A maintainer or AI agent opens the repository and reads the root README.
 2. They understand the methodology, repository shape, and active workstreams.
-3. They inspect the current workstream or scaffold a new one using the bootstrap skill.
+3. They inspect the current workstream or scaffold a new one using `mnx`, `mxw`, and the bundled workflow skill guidance.
 4. They choose either a full workstream or a lightweight patch based on the scope of the change.
 5. They fill in the relevant artifacts and implement or refine the work using them as the shared source of intent.
 
 ### Wireframes / Mockups
 
-Not applicable for the initial repository-first experience. The primary experience surface is the repository structure, Markdown artifacts, and the bootstrap skill.
+Not applicable for the initial repository-first experience. The primary experience surface is the repository structure, Markdown artifacts, the CLI, and the bundled workflow skill.
 
 ## 8. Technical Considerations
 
 ### Dependencies
-- Agent Skills Open Standard skill shape for the bootstrap implementation
-- Python 3 for the temporary scaffold script
-- Future Rust CLI work in the Mnemix ecosystem
+- Agent Skills Open Standard skill shape for the bundled workflow guidance
+- Rust CLI and TUI implementation in the Mnemix ecosystem
 
 ### Constraints
 - `mnemix-context` remains the canonical source of repo-level operating guidance
@@ -172,8 +171,8 @@ Not applicable for the initial repository-first experience. The primary experien
 - [ ] Root README clearly explains the product and quickstart
 - [ ] `workflow/` contains the active workstream domain and decision area
 - [ ] `workflow/patches/` is defined as the lightweight tracked lane
-- [ ] The bootstrap skill exists under `resources/skills/mnemix-workflow/`
-- [ ] The bootstrap script can scaffold a valid workstream
+- [ ] The workflow skill exists under `resources/skills/mnemix-workflow/`
+- [ ] The workflow skill reflects the shipped CLI-first workflow accurately
 - [ ] `001` and `002` workstreams clearly document the initial methodology and bootstrap path
 - [ ] The CLI can scaffold the primary tracked units the methodology teaches
 
@@ -195,7 +194,7 @@ later workstream introduces more formal integrations.
 |------|--------|------------|------------|
 | The framework becomes too heavy | High | Medium | Keep the common case centered on four files and make other layers additive |
 | UX specification becomes too vague or too heavy | Medium | Medium | Keep `ux.md` narrative-first with selective Gherkin scenarios |
-| The bootstrap skill becomes a permanent substitute for the CLI | Medium | Medium | Keep the script intentionally narrow and document it as transitional |
+| The workflow skill drifts away from the shipped CLI behavior | Medium | Medium | Keep the skill concise and update it whenever the CLI surface changes |
 | Skill scope grows too large | Medium | Medium | Start with one skill, then split only when real complexity appears |
 | Repo structure becomes confusing | Medium | Low | Keep clear boundaries between `docs/`, `resources/`, and `workflow/`, and explain workstreams versus patches clearly |
 
@@ -204,7 +203,7 @@ later workstream introduces more formal integrations.
 | Milestone | Target Date | Owner |
 |-----------|------------|-------|
 | Repository bootstrap and methodology docs | Completed in current repo state | Micah / Codex |
-| Bootstrap skill and temporary scaffold script | Completed in current repo state | Micah / Codex |
+| Workflow skill and CLI-aligned templates | Completed in current repo state | Micah / Codex |
 | Dedicated CLI surface | Completed in current repo state | Micah / Codex |
 | Lightweight patch lane | Completed in current repo state | Micah / Codex |
 | Interactive TUI mode | Completed as initial browse-first slice in current repo state | Micah / Codex |
@@ -213,7 +212,7 @@ later workstream introduces more formal integrations.
 ## 12. Open Questions
 
 - [ ] When should validation and export helpers split into their own skills, if ever?
-- [ ] How much of the eventual CLI should mirror the bootstrap skill exactly?
+- [ ] When should the workflow skill grow beyond conventions and command guidance into richer agent-specific workflows?
 - [ ] What should the next interactive slice be after browse-first TUI: richer inline actions, guided creation, or agent-assisted planning?
 
 ## Appendix
