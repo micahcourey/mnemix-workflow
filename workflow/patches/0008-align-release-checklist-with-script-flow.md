@@ -1,7 +1,8 @@
 ---
-status: open
+status: completed
 summary: Align the maintainer release checklist with the script-based prep and publish flow.
 updated: 2026-03-30
+prs: [19]
 ---
 
 # Patch: Align Release Checklist With Script Flow
