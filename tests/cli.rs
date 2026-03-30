@@ -1,4 +1,4 @@
-use std::{fs, process::Command};
+use std::{env, fs, path::PathBuf, process::Command};
 
 use assert_cmd::Command as AssertCommand;
 use assert_cmd::assert::OutputAssertExt;
@@ -6,6 +6,7 @@ use assert_cmd::cargo::CommandCargoExt;
 use chrono::Utc;
 use predicates::prelude::PredicateBooleanExt;
 use predicates::str::contains;
+use serde_json::Value;
 use tempfile::TempDir;
 
 fn init_git_repo() -> TempDir {
@@ -37,6 +38,199 @@ fn hook_path(name: &str) -> String {
     format!("{}/resources/hooks/{name}", env!("CARGO_MANIFEST_DIR"))
 }
 
+struct FakeGh {
+    bin_dir: PathBuf,
+    state_path: PathBuf,
+    log_path: PathBuf,
+}
+
+impl FakeGh {
+    fn install(temp_dir: &TempDir) -> Self {
+        let bin_dir = temp_dir.path().join("fake-gh-bin");
+        fs::create_dir_all(&bin_dir).expect("create fake gh bin dir");
+        let script_path = bin_dir.join("gh");
+        fs::write(&script_path, fake_gh_script()).expect("write fake gh script");
+
+        let chmod_status = Command::new("chmod")
+            .args(["+x", script_path.to_str().expect("script path")])
+            .status()
+            .expect("chmod fake gh");
+        assert!(chmod_status.success());
+
+        Self {
+            bin_dir,
+            state_path: temp_dir.path().join("gh-state.json"),
+            log_path: temp_dir.path().join("gh-log.jsonl"),
+        }
+    }
+
+    fn command(&self, bin: &str) -> AssertCommand {
+        let mut command = AssertCommand::cargo_bin(bin).expect("binary");
+        let existing_path = env::var_os("PATH").unwrap_or_default();
+        let mut paths = vec![self.bin_dir.clone()];
+        paths.extend(env::split_paths(&existing_path));
+        let joined = env::join_paths(paths).expect("join paths");
+
+        command.env("PATH", joined);
+        command.env("GH_STATE_FILE", &self.state_path);
+        command.env("GH_LOG_FILE", &self.log_path);
+        command.env("MNEMIX_WORKFLOW_GH_BIN", "gh");
+        command
+    }
+
+    fn state(&self) -> Value {
+        if !self.state_path.exists() {
+            return serde_json::json!({
+                "next_id": 1000,
+                "next_number": 1,
+                "issues": {},
+                "sub_issues": {}
+            });
+        }
+
+        let content = fs::read_to_string(&self.state_path).expect("read fake gh state");
+        serde_json::from_str(&content).expect("parse fake gh state")
+    }
+}
+
+fn git_commit_all(repo_root: &PathBuf, message: &str) {
+    let add_status = Command::new("git")
+        .args(["add", "."])
+        .current_dir(repo_root)
+        .status()
+        .expect("git add");
+    assert!(add_status.success());
+
+    let commit_status = Command::new("git")
+        .args(["commit", "-m", message])
+        .current_dir(repo_root)
+        .status()
+        .expect("git commit");
+    assert!(commit_status.success());
+}
+
+fn fake_gh_script() -> &'static str {
+    r#"#!/usr/bin/env python3
+import json
+import os
+import sys
+from pathlib import Path
+
+state_path = Path(os.environ["GH_STATE_FILE"])
+log_path = Path(os.environ["GH_LOG_FILE"])
+
+if state_path.exists():
+    state = json.loads(state_path.read_text())
+else:
+    state = {"next_id": 1000, "next_number": 1, "issues": {}, "sub_issues": {}}
+
+args = sys.argv[1:]
+if not args or args[0] != "api":
+    print("fake gh only supports `gh api`", file=sys.stderr)
+    sys.exit(1)
+
+endpoint = None
+method = "GET"
+body = None
+i = 1
+while i < len(args):
+    arg = args[i]
+    if endpoint is None:
+        endpoint = arg
+        i += 1
+        continue
+    if arg in ("--method", "-X"):
+        method = args[i + 1]
+        i += 2
+        continue
+    if arg == "--input":
+        source = args[i + 1]
+        i += 2
+        if source == "-":
+            raw = sys.stdin.read()
+            body = json.loads(raw) if raw.strip() else None
+        else:
+            body = json.loads(Path(source).read_text())
+        continue
+    if arg == "-H":
+        i += 2
+        continue
+    i += 1
+
+with log_path.open("a", encoding="utf-8") as handle:
+    handle.write(json.dumps({"endpoint": endpoint, "method": method, "body": body}) + "\n")
+
+def save_and_print(payload):
+    state_path.write_text(json.dumps(state))
+    print(json.dumps(payload))
+    sys.exit(0)
+
+def issue_by_id(issue_id):
+    for issue in state["issues"].values():
+        if issue["id"] == issue_id:
+            return issue
+    return None
+
+endpoint = endpoint or ""
+endpoint = endpoint.lstrip("/")
+parts = endpoint.split("/")
+if len(parts) < 4 or parts[0] != "repos":
+    print(f"unsupported endpoint: {endpoint}", file=sys.stderr)
+    sys.exit(1)
+
+owner = parts[1]
+repo = parts[2]
+
+if parts[3] != "issues":
+    print(f"unsupported endpoint: {endpoint}", file=sys.stderr)
+    sys.exit(1)
+
+if len(parts) == 4 and method == "POST":
+    number = state["next_number"]
+    issue_id = state["next_id"]
+    state["next_number"] += 1
+    state["next_id"] += 1
+    issue = {
+        "id": issue_id,
+        "number": number,
+        "html_url": f"https://github.com/{owner}/{repo}/issues/{number}",
+        "title": body["title"],
+        "body": body["body"],
+        "state": "open",
+    }
+    state["issues"][str(number)] = issue
+    save_and_print(issue)
+
+if len(parts) == 5 and method == "PATCH":
+    number = parts[4]
+    issue = state["issues"][number]
+    issue["title"] = body.get("title", issue["title"])
+    issue["body"] = body.get("body", issue["body"])
+    issue["state"] = body.get("state", issue["state"])
+    save_and_print(issue)
+
+if len(parts) == 6 and parts[5] == "sub_issues" and method == "GET":
+    parent = parts[4]
+    numbers = state["sub_issues"].get(parent, [])
+    payload = [state["issues"][str(number)] for number in numbers]
+    save_and_print(payload)
+
+if len(parts) == 6 and parts[5] == "sub_issues" and method == "POST":
+    parent = parts[4]
+    child = issue_by_id(body["sub_issue_id"])
+    if child is None:
+        print("unknown child issue id", file=sys.stderr)
+        sys.exit(1)
+    numbers = state["sub_issues"].setdefault(parent, [])
+    if child["number"] not in numbers:
+        numbers.append(child["number"])
+    save_and_print(child)
+
+print(f"unsupported endpoint/method: {endpoint} {method}", file=sys.stderr)
+sys.exit(1)
+"#
+}
+
 #[test]
 fn help_lists_ui_command() {
     Command::cargo_bin("mxw")
@@ -45,6 +239,7 @@ fn help_lists_ui_command() {
         .assert()
         .success()
         .stdout(contains("ui"))
+        .stdout(contains("github"))
         .stdout(contains("hooks"))
         .stdout(contains("validate"))
         .stdout(contains("openapi"))
@@ -61,6 +256,94 @@ fn mnx_help_describes_the_tui_shortcut() {
         .success()
         .stdout(contains("interactive Mnemix Workflow TUI"))
         .stdout(contains("Usage:\n  mnx"));
+}
+
+#[test]
+fn github_init_writes_config_and_optional_auto_sync_workflow() {
+    let temp_dir = init_git_repo();
+    let fake_gh = FakeGh::install(&temp_dir);
+
+    fake_gh
+        .command("mxw")
+        .args([
+            "github",
+            "init",
+            "--repo",
+            "micahcourey/mnemix-workflow",
+            "--enable-auto-sync",
+        ])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("workflow/github.yml"))
+        .stdout(contains(".github/workflows/mxw-github-sync.yml"));
+
+    let config = fs::read_to_string(temp_dir.path().join("workflow/github.yml")).expect("config");
+    assert!(config.contains("repo: micahcourey/mnemix-workflow"));
+    assert!(config.contains("enabled: true"));
+
+    let workflow = fs::read_to_string(
+        temp_dir
+            .path()
+            .join(".github/workflows/mxw-github-sync.yml"),
+    )
+    .expect("workflow");
+    assert!(workflow.contains("github sync --changed"));
+}
+
+#[test]
+fn github_sync_workstream_creates_parent_and_sub_issues_and_metadata() {
+    let temp_dir = init_git_repo();
+    let fake_gh = FakeGh::install(&temp_dir);
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "github issue support"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "init", "--repo", "octocat/hello-world"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "sync", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains(
+            "Synced workstream: 001-github-issue-support -> #1",
+        ));
+
+    let status = fs::read_to_string(
+        temp_dir
+            .path()
+            .join("workflow/workstreams/001-github-issue-support/STATUS.md"),
+    )
+    .expect("status");
+    assert!(status.contains("parent_issue:"));
+    assert!(status.contains("number: 1"));
+    assert!(status.contains("spec.md:"));
+    assert!(status.contains("number: 2"));
+    assert!(status.contains("ux.md:"));
+    assert!(status.contains("plan.md:"));
+    assert!(status.contains("tasks.md:"));
+
+    let state = fake_gh.state();
+    assert_eq!(state["issues"].as_object().expect("issues").len(), 5);
+    let parent_children = state["sub_issues"]["1"].as_array().expect("sub issues");
+    assert_eq!(parent_children.len(), 4);
 }
 
 #[test]
@@ -231,6 +514,183 @@ fn patch_new_backfills_missing_patches_dir() {
         .stdout(contains("workflow/patches/0001-fix-status-copy.md"));
 
     assert!(temp_dir.path().join("workflow/patches").is_dir());
+}
+
+#[test]
+fn github_sync_patch_creates_issue_and_records_linkage() {
+    let temp_dir = init_git_repo();
+    let fake_gh = FakeGh::install(&temp_dir);
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["patch", "new", "fix status copy"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "init", "--repo", "octocat/hello-world"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "sync", "0001-fix-status-copy.md"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Synced patch: 0001-fix-status-copy -> #1"));
+
+    let patch = fs::read_to_string(
+        temp_dir
+            .path()
+            .join("workflow/patches/0001-fix-status-copy.md"),
+    )
+    .expect("patch");
+    assert!(patch.contains("github:"));
+    assert!(patch.contains("issue:"));
+    assert!(patch.contains("number: 1"));
+}
+
+#[test]
+fn github_sync_all_and_filtered_status_handle_completed_items() {
+    let temp_dir = init_git_repo();
+    let fake_gh = FakeGh::install(&temp_dir);
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "open workstream"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "completed workstream"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["status", "set", "002", "completed"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "init", "--repo", "octocat/hello-world"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "sync", "--status", "open", "--all"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let state = fake_gh.state();
+    assert_eq!(state["issues"].as_object().expect("issues").len(), 5);
+    assert!(
+        state["issues"]["1"]["title"]
+            .as_str()
+            .expect("title")
+            .contains("Open Workstream")
+    );
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "sync", "--all"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let state = fake_gh.state();
+    assert_eq!(state["issues"].as_object().expect("issues").len(), 10);
+    assert_eq!(
+        state["issues"]["6"]["state"].as_str().expect("state"),
+        "closed"
+    );
+}
+
+#[test]
+fn github_sync_changed_updates_only_linked_changed_items() {
+    let temp_dir = init_git_repo();
+    let fake_gh = FakeGh::install(&temp_dir);
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .arg("init")
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "linked workstream"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "init", "--repo", "octocat/hello-world"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "sync", "001"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    git_commit_all(&temp_dir.path().to_path_buf(), "initial state");
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["new", "unlinked workstream"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+    fs::write(
+        temp_dir
+            .path()
+            .join("workflow/workstreams/001-linked-workstream/spec.md"),
+        "# Feature Spec: Linked Workstream\n\nUpdated content.\n",
+    )
+    .expect("write linked spec");
+
+    git_commit_all(&temp_dir.path().to_path_buf(), "changed items");
+
+    fake_gh
+        .command("mxw")
+        .args(["github", "sync", "--changed"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Synced workstream: 001-linked-workstream -> #1"))
+        .stdout(contains(
+            "Skipped unlinked workstream in --changed mode: 002-unlinked-workstream",
+        ));
+
+    let state = fake_gh.state();
+    assert_eq!(state["issues"].as_object().expect("issues").len(), 5);
 }
 
 #[test]

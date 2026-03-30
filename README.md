@@ -9,6 +9,7 @@ It combines:
 - a lightweight spec-driven planning method built around versioned Markdown artifacts
 - a command-oriented CLI for scaffolding and status management
 - an interactive terminal UI for browsing workstreams and patches quickly
+- optional repo-canonical GitHub issue mirroring for teams that want GitHub execution visibility
 - selective support for machine-readable contract standards where they add real value
 
 The result is a spec-driven workflow that stays readable to humans, operable by
@@ -44,6 +45,7 @@ history.
 - `STATUS.md` and frontmatter metadata for lightweight machine-readable state
 - `mnx` for fast interactive browsing
 - `mxw` for explicit scaffolding, status, and contract commands
+- optional `mxw github ...` commands for mirroring tracked work into GitHub Issues
 
 ## Install
 
@@ -179,7 +181,39 @@ mxw validate 008
 mxw validate 0001
 ```
 
-### 6. Launch The Interactive UI
+### 6. Mirror Tracked Work Into GitHub Issues
+
+Initialize optional GitHub issue support for the repo:
+
+```bash
+mxw github init --enable-auto-sync
+```
+
+Create or update mirrored issues for one tracked item:
+
+```bash
+mxw github sync 009
+mxw github sync 0005
+```
+
+Backfill existing tracked work or sync a filtered slice:
+
+```bash
+mxw github sync --all
+mxw github sync --status open --all
+```
+
+`mnemix-workflow` keeps the repo as the source of truth. GitHub issues are
+mirrors that get refreshed from repo artifacts, and completed tracked items are
+mirrored as closed issues. In v1, first mirror creation is explicit, while the
+optional generated GitHub Action uses `mxw github sync --changed` to refresh
+already-linked changed items on pushes to `main`.
+
+When a repo uses mirrored workflow issues, prefer keeping GitHub issue
+creation/edit permissions narrow where practical, since issue titles and bodies
+are system-managed and may be overwritten on sync.
+
+### 7. Launch The Interactive UI
 
 The fastest way into the product experience is:
 
@@ -235,6 +269,12 @@ Every pull request should map to either:
 
 - a full `workstream`
 - a lightweight `patch`
+
+GitHub issue support is intentionally additive to that model:
+
+- repo artifacts stay canonical
+- GitHub issues become optional mirrored execution surfaces
+- sync writes GitHub linkage metadata back into repo files
 
 In practice, the methodology is meant to help humans and agents align before
 implementation starts:

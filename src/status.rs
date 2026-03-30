@@ -12,7 +12,7 @@ const FRONTMATTER_DELIMITER: &str = "---\n";
 const FRONTMATTER_END: &str = "\n---\n";
 const VALID_STATUSES: &[&str] = &["proposed", "open", "completed"];
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub(crate) enum TrackedKind {
     Workstream,
     Patch,
@@ -291,6 +291,14 @@ impl StatusFile {
 
     pub(crate) fn clear_prs(&mut self) {
         self.prs = None;
+    }
+
+    pub(crate) fn extra_value(&self, key: &str) -> Option<&Value> {
+        self.extra.get(key)
+    }
+
+    pub(crate) fn set_extra_value(&mut self, key: impl Into<String>, value: Value) {
+        self.extra.insert(key.into(), value);
     }
 
     fn render(&self) -> Result<String> {

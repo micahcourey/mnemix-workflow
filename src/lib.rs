@@ -3,6 +3,7 @@
 mod cli;
 mod commands;
 mod contracts;
+mod github;
 mod hooks;
 mod scaffold;
 mod status;

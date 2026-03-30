@@ -5,6 +5,7 @@ use anyhow::Result;
 use crate::cli::Command;
 
 mod asyncapi;
+mod github;
 mod hooks;
 mod init;
 mod new;
@@ -26,6 +27,7 @@ pub(crate) fn execute(command: Command, program: &str, cwd: &Path) -> Result<Vec
         Command::Patch(args) => patch::run(cwd, program, args),
         Command::Status(args) => status::run(cwd, program, args),
         Command::Hooks(args) => hooks::run(cwd, program, args),
+        Command::Github(args) => github::run(cwd, program, args),
         Command::Validate(args) => validate::run(cwd, program, args),
     }
 }

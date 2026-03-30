@@ -23,6 +23,7 @@ The current repo state now includes:
 - patch scaffolding
 - status metadata and status commands
 - an initial browse-first interactive TUI
+- optional repo-canonical GitHub issue mirroring for workstreams and patches
 - packaged Python distribution support for `pip` and `pipx`
 - optional git hook installation
 - umbrella workflow validation
@@ -52,6 +53,7 @@ Without a lightweight, teachable workflow layer:
 | Make UX first-class | UX artifact exists and is used in active workstreams | Every user-facing workstream can define `ux.md` with narrative plus Gherkin scenarios |
 | Keep the system repo-native and AI-operable | Workstreams and decisions live in normal versioned files | No required hidden metadata system for the core workflow |
 | Keep the workflow skill aligned with the shipped CLI | Agents have a concise, standards-compliant guide to the current workflow | The skill reinforces `mxw`, `mnx`, and repo conventions without stale alternate paths |
+| Add optional GitHub execution visibility without moving source of truth | Teams can mirror tracked work into GitHub when useful | Repo artifacts stay canonical while GitHub issues remain synced mirrors |
 | Preserve ecosystem fit | Integration boundaries stay clear | `mnemix-context` remains canonical for repo rules and `mnemix` memory remains optional |
 
 ### Non-Goals
@@ -131,6 +133,16 @@ Without a lightweight, teachable workflow layer:
   - Given the v1 interactive mode, When a user wants a lightweight operational action, Then they can change the selected item's status without leaving the TUI
 - **Priority**: Should Have
 
+### FR7: Optional Repo-Canonical GitHub Issue Mirroring
+- **Description**: The CLI should optionally mirror repo-tracked work into GitHub Issues without moving source of truth out of the repository.
+- **User Story**: As a maintainer, I want GitHub Issues to reflect tracked workstreams and patches, so that teams who operate in GitHub can see and manage execution without editing planning content there.
+- **Acceptance Criteria**:
+  - Given a repo using GitHub mirroring, When a maintainer runs `mxw github sync 009`, Then the workstream is mirrored as one parent issue plus sub-issues for `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
+  - Given a patch, When a maintainer runs `mxw github sync 0005`, Then it is mirrored as a single GitHub issue
+  - Given repo-canonical sync, When issue titles or bodies are refreshed, Then manual GitHub body edits may be overwritten from repo artifacts
+  - Given automation, When the optional GitHub Action runs `mxw github sync --changed`, Then only already-linked changed items are refreshed
+- **Priority**: Should Have
+
 ## 6. Non-Functional Requirements
 
 | Category | Requirement | Target |
@@ -159,6 +171,7 @@ Not applicable for the initial repository-first experience. The primary experien
 ### Dependencies
 - Agent Skills Open Standard skill shape for the bundled workflow guidance
 - Rust CLI and TUI implementation in the Mnemix ecosystem
+- GitHub CLI and GitHub Issues APIs for optional mirrored issue support
 
 ### Constraints
 - `mnemix-context` remains the canonical source of repo-level operating guidance
@@ -168,6 +181,7 @@ Not applicable for the initial repository-first experience. The primary experien
 ### Data Requirements
 - No database requirements for v0
 - Workflows, patches, decisions, and plans are stored as normal versioned repository files
+- Optional GitHub issue linkage is stored back into repo metadata for mirrored items
 
 ## 9. Release Criteria
 
@@ -178,6 +192,7 @@ Not applicable for the initial repository-first experience. The primary experien
 - [ ] The workflow skill reflects the shipped CLI-first workflow accurately
 - [ ] `001` and `002` workstreams clearly document the initial methodology and bootstrap path
 - [ ] The CLI can scaffold the primary tracked units the methodology teaches
+- [ ] The CLI can optionally mirror tracked work into GitHub Issues while keeping repo artifacts canonical
 - [ ] The packaged install exposes `mnemix-workflow`, `mxw`, and `mnx`
 - [ ] The repo includes a maintainer-facing release checklist and publish workflow
 
@@ -202,6 +217,7 @@ later workstream introduces more formal integrations.
 | The workflow skill drifts away from the shipped CLI behavior | Medium | Medium | Keep the skill concise and update it whenever the CLI surface changes |
 | Skill scope grows too large | Medium | Medium | Start with one skill, then split only when real complexity appears |
 | Repo structure becomes confusing | Medium | Low | Keep clear boundaries between `docs/`, `resources/`, and `workflow/`, and explain workstreams versus patches clearly |
+| GitHub mirror state drifts from repo state | Medium | Medium | Keep repo artifacts canonical, overwrite issue bodies on sync, and limit auto-sync to `--changed` updates for already-linked items |
 
 ## 11. Timeline
 
@@ -213,12 +229,14 @@ later workstream introduces more formal integrations.
 | Lightweight patch lane | Completed in current repo state | Micah / Codex |
 | Interactive TUI mode | Completed as initial browse-first slice in current repo state | Micah / Codex |
 | Contract standards support | Completed as initial scaffold-and-validate slice in current repo state | Micah / Codex |
+| GitHub issue mirroring | Completed as initial repo-canonical sync slice in current repo state | Micah / Codex |
 
 ## 12. Open Questions
 
 - [ ] When should validation and export helpers split into their own skills, if ever?
 - [ ] When should the workflow skill grow beyond conventions and command guidance into richer agent-specific workflows?
 - [ ] What should the next interactive slice be after browse-first TUI: richer inline actions, guided creation, or agent-assisted planning?
+- [ ] How much GitHub Projects support should be layered on top of issue mirroring, if any?
 
 ## Appendix
 
