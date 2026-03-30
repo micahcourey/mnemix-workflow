@@ -21,9 +21,12 @@
 
 ```text
 main branch
-  -> version bump in Cargo.toml + python/mnemix_workflow/_version.py
-  -> local preflight via ./scripts/check-python-package.sh
-  -> local linux preflight via ./scripts/check-linux-release-build.sh
+  -> ./scripts/release.sh X.Y.Z
+  -> release-prep PR with aligned Cargo.toml + Cargo.lock + python/mnemix_workflow/_version.py
+  -> local preflight via ./scripts/check-python-package.sh during release prep
+  -> merge release-prep PR
+  -> ./scripts/publish-release.sh X.Y.Z
+  -> local linux preflight via ./scripts/check-linux-release-build.sh during publish
   -> published GitHub Release
   -> .github/workflows/publish-python.yml
   -> PyPI artifacts for mnemix-workflow
@@ -46,8 +49,8 @@ main branch
 | Check | Endpoint / Method | Expected | Frequency |
 |-------|-------------------|----------|-----------|
 | Version alignment | Compare `Cargo.toml` and `python/mnemix_workflow/_version.py` | Same version string | Every release |
-| Local preflight | `./scripts/check-python-package.sh` | Exit code `0` | Every release |
-| Local Linux release build | `./scripts/check-linux-release-build.sh` | Exit code `0` | Before tagging unless skipped on Apple Silicon ARM Docker |
+| Release-prep flow | `./scripts/release.sh X.Y.Z` | Opens a release-prep PR after `./scripts/check-python-package.sh` passes | Every release |
+| Publish flow | `./scripts/publish-release.sh X.Y.Z` | Tags and publishes only after the local Linux preflight passes or is intentionally skipped on Apple Silicon ARM Docker | Every release |
 | Publish workflow | GitHub Actions `Publish Python` | All jobs succeed | Every release |
 | Package availability | `python3 -m pip index versions mnemix-workflow` | New version listed | Every release |
 
@@ -63,7 +66,8 @@ main branch
 
 | Alert | Severity | Threshold | Action |
 |-------|----------|-----------|--------|
-| Preflight failure | P1 | Any non-zero exit from `./scripts/check-python-package.sh` or `./scripts/check-linux-release-build.sh` | Stop release and fix before tagging |
+| Release-prep failure | P1 | Any non-zero exit from `./scripts/release.sh X.Y.Z` | Stop release and fix before opening or merging a release-prep PR |
+| Publish preflight failure | P1 | Any non-zero exit from `./scripts/publish-release.sh X.Y.Z` before the tag is created | Stop release and fix before publishing |
 | Publish workflow failure | P1 | Any failed job in `Publish Python` after a release is published | Inspect logs and rerun only after root cause is fixed |
 | Version mismatch | P1 | GitHub tag, Cargo version, and Python version do not match | Correct versions and cut a new release |
 | Missing PyPI package update | P1 | New version absent from PyPI after successful workflow | Verify trusted publishing and package artifacts |
@@ -74,22 +78,22 @@ main branch
 
 ### Incident: Local Preflight Fails
 
-**Symptoms**: `./scripts/check-python-package.sh` exits non-zero, tests fail, or `twine check` reports metadata errors.
+**Symptoms**: `./scripts/release.sh X.Y.Z` fails, `./scripts/check-python-package.sh` exits non-zero, tests fail, or `twine check` reports metadata errors.
 
 **Diagnosis**:
 1. Read the failing step output from the local command.
-2. Confirm the version bump touched both `Cargo.toml` and `python/mnemix_workflow/_version.py`.
+2. Confirm the version bump touched `Cargo.toml`, `Cargo.lock`, and `python/mnemix_workflow/_version.py`.
 3. Check whether packaging metadata or README references moved files.
 4. Re-run the failing command directly if a narrower loop is needed.
 
 **Resolution**:
 - Fix the underlying test, metadata, or packaging issue.
-- Re-run `./scripts/check-python-package.sh` until it passes cleanly.
+- Re-run `./scripts/release.sh X.Y.Z` or `./scripts/check-python-package.sh` until it passes cleanly.
 - Do not create or publish a release until preflight is green.
 
 ### Incident: Linux Release Preflight Fails
 
-**Symptoms**: `./scripts/check-linux-release-build.sh` exits non-zero or the bundled wheel check fails inside Docker.
+**Symptoms**: `./scripts/publish-release.sh X.Y.Z` fails before tagging, or `./scripts/check-linux-release-build.sh` exits non-zero because the bundled wheel check fails inside Docker.
 
 **Diagnosis**:
 1. Read the failing Docker step output.
@@ -140,23 +144,41 @@ main branch
   Commands:
   `git checkout main`
   `git pull --ff-only origin main`
-2. Bump the version in `python/mnemix_workflow/_version.py` and `Cargo.toml`.
-  Shortcut:
-  `./scripts/release.sh X.Y.Z` automates the release-prep PR path when the only required release edits are the version bumps.
-3. Run `./scripts/check-python-package.sh`.
-4. Run `./scripts/check-linux-release-build.sh`.
-5. Merge the release-prep PR to `main`.
-6. Create and publish a GitHub Release tagged `vX.Y.Z` from the verified `main` commit.
+2. Run the standard scripted release-prep flow:
+  `./scripts/release.sh X.Y.Z`
+  This updates `Cargo.toml`, `Cargo.lock`, and
+  `python/mnemix_workflow/_version.py`, runs
+  `./scripts/check-python-package.sh`, pushes `chore/release-vX.Y.Z`, and opens
+  the release-prep PR.
+3. Review and merge the release-prep PR to `main`.
+4. Start again from a clean, up-to-date `main` checkout if needed:
+  `git checkout main`
+  `git pull --ff-only origin main`
+5. Create and publish a GitHub Release tagged `vX.Y.Z` from the verified `main` commit.
   Commands:
   `./scripts/publish-release.sh X.Y.Z`
   Note:
   `./scripts/publish-release.sh X.Y.Z` runs `./scripts/check-linux-release-build.sh` before creating the tag unless it is skipped on Apple Silicon ARM Docker.
-7. Wait for `.github/workflows/publish-python.yml` to complete successfully.
-8. Verify the new version on PyPI and in clean installs:
+6. Wait for `.github/workflows/publish-python.yml` to complete successfully.
+7. Verify the new version on PyPI and in clean installs:
   - `python3 -m pip install mnemix-workflow`
   - `pipx install mnemix-workflow`
-9. Update the GitHub Release notes from the repo copy when needed:
+8. Update the GitHub Release notes from the repo copy when needed:
   - `gh release edit vX.Y.Z --notes-file RELEASE_NOTES.md`
+
+### Manual Fallback Deployment
+
+Use this only when the scripted release-prep flow is not sufficient for an
+unusual release and you intentionally need a hand-edited prep diff.
+
+1. Start from a clean `main` branch.
+2. Manually update the release files, including at minimum:
+  - `Cargo.toml`
+  - `Cargo.lock`
+  - `python/mnemix_workflow/_version.py`
+3. Run `./scripts/check-python-package.sh`.
+4. Open and merge a release-prep PR manually.
+5. Run `./scripts/publish-release.sh X.Y.Z` from clean `main`.
 
 ### Rollback
 
