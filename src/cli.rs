@@ -46,6 +46,8 @@ pub(crate) enum Command {
     Status(StatusArgs),
     /// Install bundled git hooks for status reminders and metadata refreshes
     Hooks(HooksArgs),
+    /// Configure and sync optional GitHub issue mirrors
+    Github(GithubArgs),
     /// Run umbrella validation across tracked workflow artifacts
     Validate(ValidateArgs),
 }
@@ -197,6 +199,53 @@ pub(crate) struct HooksInstallArgs {
     /// Overwrite existing hook files when they differ
     #[arg(long)]
     pub(crate) force: bool,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct GithubArgs {
+    #[command(subcommand)]
+    pub(crate) action: GithubAction,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum GithubAction {
+    /// Initialize optional GitHub issue support for this repository
+    Init(GithubInitArgs),
+    /// Create or update mirrored GitHub issues from repo artifacts
+    Sync(GithubSyncArgs),
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct GithubInitArgs {
+    /// Explicit GitHub repository in owner/name format
+    #[arg(long)]
+    pub(crate) repo: Option<String>,
+    /// Enable the bundled GitHub Actions auto-sync workflow
+    #[arg(long)]
+    pub(crate) enable_auto_sync: bool,
+}
+
+#[derive(Args, Debug)]
+#[command(
+    group = clap::ArgGroup::new("scope")
+        .args(["target", "all", "changed"])
+        .multiple(false)
+)]
+pub(crate) struct GithubSyncArgs {
+    /// Workstream or patch reference to sync
+    pub(crate) target: Option<String>,
+    /// Sync all tracked workstreams and patches
+    #[arg(long)]
+    pub(crate) all: bool,
+    /// Sync only tracked items changed in the current git diff range
+    #[arg(long)]
+    pub(crate) changed: bool,
+    /// Optional status filter
+    #[arg(long)]
+    pub(crate) status: Option<String>,
+    /// Print planned operations without mutating GitHub or repo metadata
+    #[arg(long)]
+    pub(crate) dry_run: bool,
 }
 
 #[derive(Args, Debug)]

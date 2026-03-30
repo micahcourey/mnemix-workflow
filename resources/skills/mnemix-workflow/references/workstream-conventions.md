@@ -85,6 +85,39 @@ Helpful commands:
 - `mxw validate`
 - `mxw hooks install`
 
+## Optional GitHub Issue Mirroring
+
+When a repository wants GitHub issue visibility without moving planning source
+of truth out of the repo, initialize optional mirroring with:
+
+```bash
+mxw github init --enable-auto-sync
+```
+
+This writes:
+
+```text
+workflow/github.yml
+.github/workflows/mxw-github-sync.yml
+```
+
+Use:
+
+- `mxw github sync 009` to mirror one workstream
+- `mxw github sync 0005` to mirror one patch
+- `mxw github sync --all` to backfill all tracked items
+- `mxw github sync --status open --all` to backfill or refresh a filtered slice
+- `mxw github sync --changed` for automation that refreshes already-linked changed items
+
+Mirroring rules:
+
+- The repo remains canonical; GitHub issues are mirrors
+- Workstreams map to one parent issue plus sub-issues for `spec.md`, `ux.md`, `plan.md`, and `tasks.md`
+- Patches map to one issue each
+- Completed tracked items are mirrored as closed GitHub issues
+- Issue titles and bodies are system-managed and may be overwritten on sync
+- Teams should keep GitHub issue creation/edit permissions narrow where practical
+
 ## Optional Contract Standards
 
 When a workstream needs machine-readable contracts, keep them inside the
