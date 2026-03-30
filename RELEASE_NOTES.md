@@ -1,10 +1,10 @@
 # Release Notes
 
-Mnemix Workflow `v0.1.1` prepares the first public packaged release flow for
-the project. This release brings together the repo-native spec-driven planning
-methodology, the Rust CLI and TUI surfaces, the patch lane, contract helpers,
-and the bundled Python/PyPI packaging path so the product can be installed with
-`pip` and `pipx` instead of only local Cargo workflows.
+Mnemix Workflow `v0.2.0` adds optional repo-canonical GitHub issue support so
+teams can mirror tracked workstreams and patches into GitHub without moving the
+source of truth out of the repository. This release keeps the repo-native
+spec-driven workflow intact while extending the CLI with a practical execution
+surface for GitHub-centric teams.
 
 ---
 
@@ -12,61 +12,61 @@ and the bundled Python/PyPI packaging path so the product can be installed with
 
 | Field | Value |
 |-------|-------|
-| **Release Date** | 2026-03-29 |
-| **Version** | `v0.1.1` |
-| **Release Type** | Patch |
-| **Release Focus** | First public release packaging and release-process readiness |
+| **Release Date** | 2026-03-30 |
+| **Version** | `v0.2.0` |
+| **Release Type** | Minor |
+| **Release Focus** | GitHub issue mirroring and release-flow polish |
 
 ## Release Scope
 
-This release packages the existing `mnemix-workflow` product surface for
-distribution and captures the maintainer workflows needed to cut and publish
-future releases cleanly.
+This release expands the shipped workflow surface with optional GitHub issue
+mirroring and rounds out the release process with stronger CI and clearer
+maintainer documentation.
 
 | Area | Summary | Status |
 |------|---------|--------|
-| Core CLI and TUI | `mnemix-workflow`, `mxw`, and `mnx` provide scaffolding, status tracking, contract helpers, and a browse-first TUI | Done |
-| Patch lane | Lightweight tracked patches exist under `workflow/patches/` | Done |
-| Contract standards | OpenAPI, AsyncAPI, and JSON Schema scaffolding/validation are shipped | Done |
-| Packaging and release flow | Bundled Python distribution, release scripts, and GitHub publish workflow are in place | Done |
+| GitHub issue support | `mxw github init` and `mxw github sync` can mirror workstreams and patches into GitHub Issues while keeping repo artifacts canonical | Done |
+| Filtered and automation-friendly sync | Sync supports single-target, `--all`, `--status`, `--changed`, and `--dry-run` flows, plus optional generated auto-sync workflow scaffolding | Done |
+| Pull request CI | Standard PR checks now run formatting, clippy, tests, shell validation, and Python package preflight on PRs and `main` pushes | Done |
+| Release maintenance polish | Release prep now stages `Cargo.lock`, the runbook matches the scripted flow, and the repo includes maintained release notes/changelog artifacts | Done |
 
 ## User Acceptance Checks
 
-This release focuses on installability, packaging correctness, and release
-readiness rather than a new user-facing feature slice.
+This release focuses on the new GitHub workflow surface plus the release and CI
+polish needed to support it confidently.
 
 | Test Scenario | Result |
 |---------------|--------|
+| Run Rust verification with `cargo fmt --all --check` | Pass |
 | Run Rust test suite with `cargo test` | Pass |
-| Run Python package tests | Pass |
-| Build sdist and validate metadata with `twine check --strict` | Pass |
-| Build and install bundled wheel in a clean virtual environment | Pass |
-| Verify packaged entrypoints `mnemix-workflow`, `mxw`, and `mnx` | Pass |
+| Run linting with `cargo clippy --all-targets -- -D warnings` | Pass |
+| Verify `mxw github --help` and `mxw github sync --help` | Pass |
+| Validate PR CI workflow coverage on normal pull requests | Pass |
 
 ## Known Follow-Ups
 
 | Item | Status |
 |------|--------|
-| Add normal pull-request CI checks so release-prep PRs show GitHub checks | Planned in `workflow/patches/0005-add-pull-request-ci-checks.md` |
-| Keep release notes updated for subsequent releases | Ongoing maintainer task |
+| Deeper GitHub integration such as Projects support | Future workstream |
+| GitHub issue editing guidance and permissions remain operator-controlled rather than enforced by the CLI | Ongoing maintainer guidance |
 
 ## Deployment Checklist
 
-- [x] Package metadata aligned for `Cargo.toml` and `python/mnemix_workflow/_version.py`
-- [x] Publish workflow configured for the `pypi` environment
-- [x] Local package preflight passes
-- [x] Release tag created
-- [x] GitHub Release published
-- [x] PyPI publish workflow completed successfully
-- [x] Clean `pip install mnemix-workflow` verification completed against the live package
-- [x] Clean `pipx install mnemix-workflow` verification completed against the live package
+- [x] Release branch prepared for `v0.2.0`
+- [x] Release notes updated for `v0.2.0`
+- [x] Changelog updated with prior and current releases
+- [ ] Release tag created
+- [ ] GitHub Release published
+- [ ] PyPI publish workflow completed successfully
+- [ ] Clean `pip install mnemix-workflow` verification completed against the live package
+- [ ] Clean `pipx install mnemix-workflow` verification completed against the live package
 
 ## Notes
 
 Use this file as the GitHub Release notes source when needed:
 
 ```bash
-gh release edit v0.1.1 --notes-file RELEASE_NOTES.md
+gh release edit v0.2.0 --notes-file RELEASE_NOTES.md
 ```
 
 Updating release notes does not rebuild or republish package artifacts.
