@@ -2,6 +2,7 @@
 status: open
 summary: Planned issue-first Linear support using the official API and keeping Projects out of the first slice.
 updated: 2026-03-31
+prs: [74]
 ---
 
 # Status
