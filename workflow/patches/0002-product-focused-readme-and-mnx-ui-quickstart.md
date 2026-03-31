@@ -1,9 +1,16 @@
 ---
 status: completed
 summary: Reworked the README into a more product-focused entrypoint with clearer mnx and quickstart guidance.
-updated: 2026-03-29
+updated: 2026-03-31
 prs:
 - 10
+github:
+  issue:
+    id: 4174790331
+    number: 67
+    url: https://github.com/micahcourey/mnemix-workflow/issues/67
+  parent_issue: null
+  sub_issues: {}
 
 ---
 

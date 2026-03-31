@@ -1,0 +1,33 @@
+name: Mnemix GitHub Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "workflow/**"
+      - "workflow/github.yml"
+  workflow_dispatch:
+
+jobs:
+  sync:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.85.0
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2
+
+      - name: Sync changed GitHub issue mirrors
+        run: cargo run --bin mxw -- github sync --changed

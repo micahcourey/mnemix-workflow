@@ -1,9 +1,17 @@
 ---
 status: completed
 summary: Added a root release-notes file for the current mnemix-workflow release flow.
-updated: 2026-03-29
+updated: 2026-03-31
 prs:
-  - 16
+- 16
+github:
+  issue:
+    id: 4174790600
+    number: 72
+    url: https://github.com/micahcourey/mnemix-workflow/issues/72
+  parent_issue: null
+  sub_issues: {}
+
 ---
 
 # Patch: Add Release Notes Template

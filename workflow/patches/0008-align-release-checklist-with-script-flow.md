@@ -1,8 +1,17 @@
 ---
 status: completed
 summary: Align the maintainer release checklist with the script-based prep and publish flow.
-updated: 2026-03-30
-prs: [19]
+updated: 2026-03-31
+prs:
+- 19
+github:
+  issue:
+    id: 4174790668
+    number: 73
+    url: https://github.com/micahcourey/mnemix-workflow/issues/73
+  parent_issue: null
+  sub_issues: {}
+
 ---
 
 # Patch: Align Release Checklist With Script Flow

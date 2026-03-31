@@ -1,0 +1,5 @@
+enabled: true
+repo: micahcourey/mnemix-workflow
+auto_sync:
+  enabled: true
+  mode: changed

@@ -1,9 +1,16 @@
 ---
 status: completed
 summary: Styled fenced Markdown code blocks as distinct terminal blocks in mnx.
-updated: 2026-03-29
+updated: 2026-03-31
 prs:
 - 11
+github:
+  issue:
+    id: 4174790381
+    number: 68
+    url: https://github.com/micahcourey/mnemix-workflow/issues/68
+  parent_issue: null
+  sub_issues: {}
 
 ---
 
