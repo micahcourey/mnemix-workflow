@@ -1,9 +1,17 @@
 ---
 status: completed
 summary: Added a dedicated PR CI workflow for Rust, shell, and Python package checks.
-updated: 2026-03-29
+updated: 2026-03-31
 prs:
-  - 17
+- 17
+github:
+  issue:
+    id: 4174790479
+    number: 70
+    url: https://github.com/micahcourey/mnemix-workflow/issues/70
+  parent_issue: null
+  sub_issues: {}
+
 ---
 
 # Patch: Add Pull Request Ci Checks

@@ -1,9 +1,16 @@
 ---
 status: completed
 summary: Updated the workflow skill and docs to be fully CLI-first and removed the old scaffold script.
-updated: 2026-03-29
+updated: 2026-03-31
 prs:
 - 12
+github:
+  issue:
+    id: 4174790439
+    number: 69
+    url: https://github.com/micahcourey/mnemix-workflow/issues/69
+  parent_issue: null
+  sub_issues: {}
 
 ---
 

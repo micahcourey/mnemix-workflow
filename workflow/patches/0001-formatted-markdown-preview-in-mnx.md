@@ -1,9 +1,16 @@
 ---
 status: completed
 summary: Added basic Markdown-aware formatting to the mnx preview pane.
-updated: 2026-03-29
+updated: 2026-03-31
 prs:
 - 9
+github:
+  issue:
+    id: 4174790159
+    number: 66
+    url: https://github.com/micahcourey/mnemix-workflow/issues/66
+  parent_issue: null
+  sub_issues: {}
 
 ---
 

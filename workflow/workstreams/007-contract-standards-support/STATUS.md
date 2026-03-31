@@ -4,6 +4,29 @@ summary: Added scaffold-and-validate support for OpenAPI, AsyncAPI, and JSON Sch
 updated: 2026-03-29
 prs:
 - 8
+github:
+  issue: null
+  parent_issue:
+    id: 4174788591
+    number: 51
+    url: https://github.com/micahcourey/mnemix-workflow/issues/51
+  sub_issues:
+    plan.md:
+      id: 4174788857
+      number: 54
+      url: https://github.com/micahcourey/mnemix-workflow/issues/54
+    spec.md:
+      id: 4174788639
+      number: 52
+      url: https://github.com/micahcourey/mnemix-workflow/issues/52
+    tasks.md:
+      id: 4174788971
+      number: 55
+      url: https://github.com/micahcourey/mnemix-workflow/issues/55
+    ux.md:
+      id: 4174788715
+      number: 53
+      url: https://github.com/micahcourey/mnemix-workflow/issues/53
 
 ---
 
