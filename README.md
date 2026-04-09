@@ -8,6 +8,7 @@ It combines:
 
 - a lightweight spec-driven planning method built around versioned Markdown artifacts
 - a command-oriented CLI for scaffolding and status management
+- repo-local slash-command installation for supported AI assistants
 - an interactive terminal UI for browsing workstreams and patches quickly
 - optional repo-canonical GitHub issue mirroring for teams that want GitHub execution visibility
 - selective support for machine-readable contract standards where they add real value
@@ -45,6 +46,7 @@ history.
 - `STATUS.md` and frontmatter metadata for lightweight machine-readable state
 - `mnx` for fast interactive browsing
 - `mxw` for explicit scaffolding, status, and contract commands
+- `mxw agent ...` for repo-local slash-command installation in supported assistants
 - optional `mxw github ...` commands for mirroring tracked work into GitHub Issues
 
 ## Install
@@ -155,7 +157,48 @@ mxw status list --status completed
 mxw patch status list --status open
 ```
 
-### 4. Install Optional Git Hooks
+### 4. Install Optional Slash Commands
+
+Install repo-local slash commands for supported assistants:
+
+```bash
+mxw agent install
+```
+
+Show the supported assistant integrations:
+
+```bash
+mxw agent tools
+```
+
+Refresh generated command files after an upgrade:
+
+```bash
+mxw agent update
+```
+
+This writes command files under the current repository for the initial supported
+tools:
+
+- `.claude/commands/mxw/`
+- `.cursor/commands/mxw/`
+
+The installed command set is:
+
+- `/mxw:explore`
+- `/mxw:track`
+- `/mxw:implement`
+- `/mxw:close`
+- `/mxw:sync`
+- `/mxw:status`
+
+These commands are a convenience layer over the normal repo-native workflow.
+`mxw` remains the authoritative workflow engine underneath.
+
+For the full command reference and setup notes, see
+[docs/slash-commands.md](docs/slash-commands.md).
+
+### 5. Install Optional Git Hooks
 
 ```bash
 mxw hooks install
@@ -356,10 +399,12 @@ These artifacts live under a workstream's `contracts/` folder when needed.
 README.md
 Cargo.toml
 docs/
+  slash-commands.md
   methodology/
 src/
 tests/
 resources/
+  commands/
   hooks/
   skills/
     mnemix-workflow/
@@ -373,6 +418,10 @@ workflow/
 
 - `docs/`
   - explanatory docs about the method and product direction
+- `docs/slash-commands.md`
+  - setup and command reference for assistant slash-command integrations
+- `resources/commands/`
+  - shared slash-command prompt templates rendered into supported assistants
 - `resources/skills/`
   - reusable agent-facing assets and templates
 - `resources/hooks/`
@@ -391,6 +440,7 @@ workflow/
 Start with:
 
 - [Methodology Naming System](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/methodology/naming-system.md)
+- [Slash Commands](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/slash-commands.md)
 - [Product Requirements Document](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/prd.md)
 - [Release Checklist](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/docs/release-checklist.md)
 - [Bootstrap Workstream 001](/Users/micah/Projects/mnemix-workspace/mnemix-workflow/workflow/workstreams/001-bootstrap-mnemix-workflow/spec.md)
@@ -409,6 +459,7 @@ The current implementation includes:
 - repo initialization and scaffolding via `mxw`
 - workstream and patch tracking
 - status metadata and PR linkage
+- repo-local slash-command installation via `mxw agent install`
 - browse-first TUI access via `mnx`
 - contract scaffolding and validation for `OpenAPI`, `AsyncAPI`, and `JSON Schema`
 - packaged install support for `pip` and `pipx`

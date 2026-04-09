@@ -29,9 +29,10 @@ same conventions.
 8. Keep metadata current with `mxw status`, `mxw patch status`, or the in-TUI status action.
 9. Run `mxw validate` before wrapping up meaningful work so tracked artifacts and optional contracts stay healthy.
 10. If the repository uses GitHub issue mirroring, initialize it with `mxw github init` and sync with `mxw github sync ...` instead of hand-authoring issue bodies.
-11. Offer `mxw hooks install` when the repository would benefit from automatic `updated` refreshes and push-time reminders.
-12. Record workstream-local decisions in `decisions/`.
-13. Promote durable framework decisions to `workflow/decisions/` when needed.
+11. When the repository wants chat-native workflow entrypoints in supported assistants, install them with `mxw agent install`.
+12. Offer `mxw hooks install` when the repository would benefit from automatic `updated` refreshes and push-time reminders.
+13. Record workstream-local decisions in `decisions/`.
+14. Promote durable framework decisions to `workflow/decisions/` when needed.
 
 ## Bundled Resources
 
@@ -61,6 +62,9 @@ Read `references/workstream-conventions.md` when you need:
 - Patches are single files under `workflow/patches/` and carry the same frontmatter metadata directly in the patch file.
 - Every PR should map to either a workstream or a patch.
 - Use `mxw status list` and `mxw patch status list` when you need a non-TUI view of open or completed tracked work.
+- Use `mxw agent install` or `mxw agent update` to install or refresh repo-local slash commands for supported assistants.
+- The bundled slash-command set is `/mxw:explore`, `/mxw:track`, `/mxw:implement`, `/mxw:close`, `/mxw:sync`, and `/mxw:status`.
+- Treat slash commands as a convenience layer over the same repo-native workflow model, not as a separate planning system.
 - Use `mxw validate` to run an umbrella check across tracked metadata and any present contract artifacts.
 - Use `mxw hooks install` to install the bundled `pre-commit` and `pre-push` hook helpers when the repo wants the status nudges.
 - When a repo wants GitHub execution visibility, use `mxw github init --enable-auto-sync`, then `mxw github sync <target>`, `mxw github sync --all`, or `mxw github sync --status open --all`.

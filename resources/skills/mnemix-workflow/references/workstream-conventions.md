@@ -82,8 +82,37 @@ Helpful commands:
 
 - `mxw status list --status open`
 - `mxw patch status list --status completed`
+- `mxw agent install`
+- `mxw agent update`
 - `mxw validate`
 - `mxw hooks install`
+
+## Optional Slash Commands
+
+When a repository wants chat-native workflow entrypoints in supported AI
+assistants, install the repo-local slash commands with:
+
+```bash
+mxw agent install
+```
+
+Refresh them with:
+
+```bash
+mxw agent update
+```
+
+The bundled command set is:
+
+- `/mxw:explore`
+- `/mxw:track`
+- `/mxw:implement`
+- `/mxw:close`
+- `/mxw:sync`
+- `/mxw:status`
+
+These commands are a convenience layer over the normal `mxw` workflow rather
+than a separate planning system.
 
 ## Optional GitHub Issue Mirroring
 

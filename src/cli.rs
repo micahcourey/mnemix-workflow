@@ -1,4 +1,4 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 const AFTER_HELP: &str = "\
 Install:
@@ -9,6 +9,7 @@ Common commands:
   mxw init
   mxw new \"feature name\"
   mxw patch new \"small fix\"
+  mxw agent install
   mxw validate
   mxw hooks install
   mnx
@@ -30,6 +31,8 @@ pub(crate) struct Cli {
 pub(crate) enum Command {
     /// Initialize the minimum workflow structure in the current repository
     Init,
+    /// Install or refresh assistant slash-command integrations
+    Agent(AgentArgs),
     /// Create a new workstream in an initialized repository
     New(NewArgs),
     /// Scaffold or validate OpenAPI contracts
@@ -50,6 +53,51 @@ pub(crate) enum Command {
     Github(GithubArgs),
     /// Run umbrella validation across tracked workflow artifacts
     Validate(ValidateArgs),
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct AgentArgs {
+    #[command(subcommand)]
+    pub(crate) action: AgentAction,
+}
+
+#[derive(Subcommand, Debug)]
+pub(crate) enum AgentAction {
+    /// Install assistant slash-command files into the current repository
+    Install(AgentInstallArgs),
+    /// Refresh assistant slash-command files in the current repository
+    Update(AgentInstallArgs),
+    /// List supported assistant integrations
+    Tools,
+}
+
+#[derive(Args, Debug)]
+pub(crate) struct AgentInstallArgs {
+    /// Assistant integration to configure; repeat to select multiple tools
+    #[arg(long = "tool", value_enum)]
+    pub(crate) tools: Vec<AssistantTool>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
+pub(crate) enum AssistantTool {
+    Claude,
+    Cursor,
+}
+
+impl AssistantTool {
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::Claude => "claude",
+            Self::Cursor => "cursor",
+        }
+    }
+
+    pub(crate) fn display_name(self) -> &'static str {
+        match self {
+            Self::Claude => "Claude Code",
+            Self::Cursor => "Cursor",
+        }
+    }
 }
 
 #[derive(Args, Debug)]

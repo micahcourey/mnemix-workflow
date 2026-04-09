@@ -4,6 +4,7 @@ use anyhow::Result;
 
 use crate::cli::Command;
 
+mod agent;
 mod asyncapi;
 mod github;
 mod hooks;
@@ -19,6 +20,7 @@ mod validate;
 pub(crate) fn execute(command: Command, program: &str, cwd: &Path) -> Result<Vec<String>> {
     match command {
         Command::Init => init::run(cwd, program),
+        Command::Agent(args) => agent::run(cwd, program, args),
         Command::New(args) => new::run(cwd, program, &args.name),
         Command::Openapi(args) => openapi::run(cwd, program, args),
         Command::Asyncapi(args) => asyncapi::run(cwd, program, args),
