@@ -321,7 +321,9 @@ fn agent_install_refuses_to_overwrite_changed_command_files_without_update() {
         .current_dir(temp_dir.path())
         .assert()
         .failure()
-        .stderr(contains("Refusing to overwrite existing assistant command files"))
+        .stderr(contains(
+            "Refusing to overwrite existing assistant command files",
+        ))
         .stderr(contains("Run `mxw agent update` to refresh them."));
 }
 

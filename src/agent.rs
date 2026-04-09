@@ -97,10 +97,7 @@ pub(crate) fn install(
 
             fs::write(&path, template.content)
                 .with_context(|| format!("Failed to write {}", path.display()))?;
-            lines.push(format!(
-                "  {action}: {}",
-                repo_relative(repo_root, &path)
-            ));
+            lines.push(format!("  {action}: {}", repo_relative(repo_root, &path)));
         }
     }
 
