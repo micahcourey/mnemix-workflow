@@ -1,5 +1,6 @@
 //! Shared CLI runtime for Mnemix Workflow.
 
+mod agent;
 mod cli;
 mod commands;
 mod contracts;

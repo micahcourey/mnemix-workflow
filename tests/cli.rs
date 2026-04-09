@@ -238,6 +238,7 @@ fn help_lists_ui_command() {
         .arg("--help")
         .assert()
         .success()
+        .stdout(contains("agent"))
         .stdout(contains("ui"))
         .stdout(contains("github"))
         .stdout(contains("hooks"))
@@ -256,6 +257,102 @@ fn mnx_help_describes_the_tui_shortcut() {
         .success()
         .stdout(contains("interactive Mnemix Workflow TUI"))
         .stdout(contains("Usage:\n  mnx"));
+}
+
+#[test]
+fn agent_tools_lists_supported_integrations() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["agent", "tools"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Claude Code (`claude`): .claude/commands/mxw"))
+        .stdout(contains("Cursor (`cursor`): .cursor/commands/mxw"))
+        .stdout(contains("/mxw:track"));
+}
+
+#[test]
+fn agent_install_writes_repo_local_slash_commands() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["agent", "install", "--tool", "claude", "--tool", "cursor"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains(".claude/commands/mxw/explore.md"))
+        .stdout(contains(".cursor/commands/mxw/status.md"));
+
+    let claude_track = temp_dir.path().join(".claude/commands/mxw/track.md");
+    let cursor_status = temp_dir.path().join(".cursor/commands/mxw/status.md");
+    assert!(claude_track.is_file());
+    assert!(cursor_status.is_file());
+
+    let track = fs::read_to_string(claude_track).expect("read claude track");
+    assert!(track.contains("# /mxw:track"));
+    assert!(track.contains("mxw patch new"));
+
+    let status = fs::read_to_string(cursor_status).expect("read cursor status");
+    assert!(status.contains("# /mxw:status"));
+    assert!(status.contains("mxw patch status"));
+}
+
+#[test]
+fn agent_install_refuses_to_overwrite_changed_command_files_without_update() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["agent", "install", "--tool", "claude"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let path = temp_dir.path().join(".claude/commands/mxw/explore.md");
+    fs::write(&path, "custom command").expect("overwrite command");
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["agent", "install", "--tool", "claude"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .failure()
+        .stderr(contains(
+            "Refusing to overwrite existing assistant command files",
+        ))
+        .stderr(contains("Run `mxw agent update` to refresh them."));
+}
+
+#[test]
+fn agent_update_refreshes_existing_command_files() {
+    let temp_dir = init_git_repo();
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["agent", "install", "--tool", "cursor"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success();
+
+    let path = temp_dir.path().join(".cursor/commands/mxw/close.md");
+    fs::write(&path, "stale command").expect("overwrite command");
+
+    Command::cargo_bin("mxw")
+        .expect("binary")
+        .args(["agent", "update", "--tool", "cursor"])
+        .current_dir(temp_dir.path())
+        .assert()
+        .success()
+        .stdout(contains("Updated assistant slash commands."))
+        .stdout(contains("Updated: .cursor/commands/mxw/close.md"));
+
+    let rendered = fs::read_to_string(path).expect("read command");
+    assert!(rendered.contains("# /mxw:close"));
+    assert!(rendered.contains("status to `completed`"));
 }
 
 #[test]
